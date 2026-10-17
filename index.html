@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Vela de Cumpleaños Digital | Experiencia BTL Interactiva</title>
+  
+  <!-- Icono y Metadatos para Móviles y PWA -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta name="theme-color" content="#08070d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Vela de cumpleaños digital y multijugador interactiva para activaciones BTL y eventos en vivo.">
+
+  <!-- Tipografía moderna y elegante para eventos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Estilos principales -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ========================================================
+       MODAL DE BIENVENIDA / SOLICITUD DE PERMISOS DE AUDIO
+       Requerimiento estricto: Interacción del usuario requerida
+       por navegadores móviles (iOS Safari / Chrome) para desbloquear
+       el AudioContext y solicitar permisos del micrófono.
+       ======================================================== -->
+  <div id="welcome-modal" class="modal-overlay active">
+    <div class="modal-card">
+      <div class="modal-icon-sparkle">🕯️✨</div>
+      <h1 class="modal-title">Celebración en Vivo</h1>
+      <p class="modal-subtitle">
+        Conéctate con todos los asistentes para apagar la vela de cumpleaños gigante soplando al micrófono de tu teléfono.
+      </p>
+
+      <div class="instructions-pill">
+        <span class="pill-icon">💨</span>
+        <span>Sopla directo al micrófono para bajar la llama</span>
+      </div>
+
+      <button id="btn-join" class="btn-primary" aria-label="Unirse a la celebración">
+        <span class="btn-glow"></span>
+        <span class="btn-content">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+          Unirse a la celebración
+        </span>
+      </button>
+
+      <p class="audio-notice">
+        🔒 Se solicitará permiso para acceder a tu micrófono en tiempo real. No se grabará ni almacenará ningún audio.
+      </p>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       ESCENARIO PRINCIPAL (Vela, Glow ambiental y HUD)
+       ======================================================== -->
+  <main id="app-container" class="app-container">
+    
+    <!-- Resplandor ambiental de fondo sincronizado con la vela -->
+    <div id="ambient-glow" class="ambient-glow"></div>
+
+    <!-- HUD Superior: Estado Multijugador y Barra de Vida -->
+    <header class="hud-header">
+      <div class="header-badges">
+        <div class="live-pill">
+          <span class="live-dot"></span>
+          <span>EN VIVO MULTIJUGADOR</span>
+        </div>
+        <div id="mic-indicator" class="mic-status-pill">
+          <span class="mic-icon">🎙️</span>
+          <span id="mic-text">Listo para soplar</span>
+        </div>
+      </div>
+
+      <!-- Barra de Vida Colectiva -->
+      <div class="health-container">
+        <div class="health-info">
+          <span class="health-label">ENERGÍA DE LA LLAMA</span>
+          <span id="health-value-text" class="health-percentage">100%</span>
+        </div>
+        <div class="health-bar-track">
+          <div id="health-bar-fill" class="health-bar-fill" style="width: 100%;"></div>
+        </div>
+        <div class="health-points">
+          <span id="health-raw-text">10,000 / 10,000 HP</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Escenario Central de la Vela -->
+    <section class="candle-stage" aria-label="Vela interactiva">
+      
+      <!-- Contenedor de la Llama y Efectos -->
+      <div id="flame-wrapper" class="flame-wrapper">
+        
+        <!-- Partículas de humo al apagarse -->
+        <div id="smoke-container" class="smoke-container">
+          <div class="smoke-particle p1"></div>
+          <div class="smoke-particle p2"></div>
+          <div class="smoke-particle p3"></div>
+        </div>
+
+        <!-- Elemento central: Llama con efecto glow dinámico -->
+        <div id="candle-flame" class="candle-flame" aria-hidden="true">
+          <div class="flame-inner-white"></div>
+          <div class="flame-inner-blue"></div>
+        </div>
+
+        <!-- Mecha de la vela con brasa -->
+        <div class="candle-wick">
+          <div class="wick-ember"></div>
+        </div>
+      </div>
+
+      <!-- Cuerpo cilíndrico de la vela de cumpleaños -->
+      <div class="candle-body">
+        <div class="candle-top-rim"></div>
+        <div class="candle-stripes"></div>
+        <div class="wax-drip drip-left"></div>
+        <div class="wax-drip drip-right"></div>
+        <div class="candle-base-shadow"></div>
+      </div>
+
+      <!-- Plato / Base festiva -->
+      <div class="candle-plate"></div>
+    </section>
+
+    <!-- Feedback en tiempo real para el usuario que sopla -->
+    <div id="blow-feedback" class="blow-feedback">
+      <span class="blow-emoji">💨</span>
+      <span class="blow-text">¡Estás soplando! ¡Sigue así!</span>
+      <div class="blow-meter">
+        <div id="blow-meter-fill" class="blow-meter-fill"></div>
+      </div>
+    </div>
+
+    <!-- Barra inferior con controles para Eventos BTL (Reiniciar / Demo) -->
+    <footer class="hud-footer">
+      <button id="btn-reset" class="btn-subtle" title="Reiniciar vela a 10,000 HP para el próximo pase del show">
+        🔄 Reiniciar Vela (Admin / BTL)
+      </button>
+      <span id="connection-status" class="connection-status">
+        ● Sincronizado
+      </span>
+    </footer>
+  </main>
+
+  <!-- ========================================================
+       MODAL DE VICTORIA: ¡DESEO CUMPLIDO!
+       Se activa automáticamente cuando vida_vela <= 0
+       ======================================================== -->
+  <div id="victory-modal" class="modal-overlay victory-overlay">
+    <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+    <div class="modal-card victory-card">
+      <div class="victory-icon">🎉🎂✨</div>
+      <h2 class="victory-title">¡Deseo Cumplido!</h2>
+      <p class="victory-message">
+        ¡Increíble trabajo en equipo! Todos los soplidos se unieron y la vela se ha apagado.
+      </p>
+      <div class="wish-highlight">
+        "Que este nuevo año venga lleno de éxitos y momentos inolvidables"
+      </div>
+      <button id="btn-restart-celebration" class="btn-primary victory-btn">
+        <span class="btn-glow"></span>
+        <span class="btn-content">Encender de nuevo</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notificación flotante para alertas / aviso de credenciales -->
+  <div id="toast-notification" class="toast-notification" aria-live="polite"></div>
+
+  <!-- ========================================================
+       LÓGICA DE LA APLICACIÓN (Módulo Vanilla JavaScript)
+       Utiliza importación nativa moderna ES Modules de Firebase vía CDN
+       ======================================================== -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
