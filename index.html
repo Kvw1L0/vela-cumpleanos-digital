@@ -96,42 +96,46 @@
       </div>
     </header>
 
-    <!-- Escenario Central de la Vela -->
-    <section class="candle-stage" aria-label="Vela interactiva">
+    <!-- Escenario Central de la Torta de Cumpleaños -->
+    <section class="candle-stage" aria-label="Torta de cumpleaños interactiva">
       
-      <!-- Contenedor de la Llama y Efectos -->
-      <div id="flame-wrapper" class="flame-wrapper">
+      <!-- Contenedor de la Torta y Llamas Virtuales -->
+      <div id="cake-wrapper" class="cake-wrapper">
+        <img src="torta.png" alt="Torta 82 años Aniversario 2026" class="cake-image" id="cake-image">
         
-        <!-- Partículas de humo al apagarse -->
-        <div id="smoke-container" class="smoke-container">
-          <div class="smoke-particle p1"></div>
-          <div class="smoke-particle p2"></div>
-          <div class="smoke-particle p3"></div>
+        <!-- LLAMA VIRTUAL 1: Sobre la vela del número '8' -->
+        <div class="flame-anchor flame-8">
+          <div class="smoke-container smoke-8">
+            <div class="smoke-particle p1"></div>
+            <div class="smoke-particle p2"></div>
+            <div class="smoke-particle p3"></div>
+          </div>
+          <div class="candle-flame flame-left" aria-hidden="true">
+            <div class="flame-inner-white"></div>
+            <div class="flame-inner-blue"></div>
+          </div>
+          <div class="candle-wick">
+            <div class="wick-ember"></div>
+          </div>
         </div>
 
-        <!-- Elemento central: Llama con efecto glow dinámico -->
-        <div id="candle-flame" class="candle-flame" aria-hidden="true">
-          <div class="flame-inner-white"></div>
-          <div class="flame-inner-blue"></div>
+        <!-- LLAMA VIRTUAL 2: Sobre la vela del número '2' -->
+        <div class="flame-anchor flame-2">
+          <div class="smoke-container smoke-2">
+            <div class="smoke-particle p1"></div>
+            <div class="smoke-particle p2"></div>
+            <div class="smoke-particle p3"></div>
+          </div>
+          <div class="candle-flame flame-right" aria-hidden="true">
+            <div class="flame-inner-white"></div>
+            <div class="flame-inner-blue"></div>
+          </div>
+          <div class="candle-wick">
+            <div class="wick-ember"></div>
+          </div>
         </div>
 
-        <!-- Mecha de la vela con brasa -->
-        <div class="candle-wick">
-          <div class="wick-ember"></div>
-        </div>
       </div>
-
-      <!-- Cuerpo cilíndrico de la vela de cumpleaños -->
-      <div class="candle-body">
-        <div class="candle-top-rim"></div>
-        <div class="candle-stripes"></div>
-        <div class="wax-drip drip-left"></div>
-        <div class="wax-drip drip-right"></div>
-        <div class="candle-base-shadow"></div>
-      </div>
-
-      <!-- Plato / Base festiva -->
-      <div class="candle-plate"></div>
     </section>
 
     <!-- Feedback en tiempo real para el usuario que sopla -->

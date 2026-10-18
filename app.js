@@ -94,8 +94,8 @@ const DOM = {
   welcomeModal: document.getElementById("welcome-modal"),
   btnJoin: document.getElementById("btn-join"),
   ambientGlow: document.getElementById("ambient-glow"),
-  candleFlame: document.getElementById("candle-flame"),
-  smokeContainer: document.getElementById("smoke-container"),
+  candleFlames: document.querySelectorAll(".candle-flame"),
+  smokeContainers: document.querySelectorAll(".smoke-container"),
   healthBarFill: document.getElementById("health-bar-fill"),
   healthValueText: document.getElementById("health-value-text"),
   healthRawText: document.getElementById("health-raw-text"),
@@ -296,12 +296,14 @@ function updateCandleVisuals(health) {
  * Ejecuta la secuencia visual cuando la vela se apaga por completo.
  */
 function triggerExtinguishedState() {
-  // Apagar la llama y el glow
-  DOM.candleFlame.classList.add("extinguished");
-  DOM.candleFlame.classList.remove("is-blowing");
+  // Apagar ambas llamas y sus glows
+  DOM.candleFlames.forEach(flame => {
+    flame.classList.add("extinguished");
+    flame.classList.remove("is-blowing");
+  });
   
-  // Activar humo saliendo de la mecha
-  DOM.smokeContainer.classList.add("active");
+  // Activar humo saliendo de ambas mechas
+  DOM.smokeContainers.forEach(smoke => smoke.classList.add("active"));
 
   // Retroalimentación háptica en teléfonos Android
   if (navigator.vibrate) {
@@ -319,8 +321,8 @@ function triggerExtinguishedState() {
  * Re-enciende la vela si se solicita un reinicio.
  */
 function triggerRekindleState() {
-  DOM.candleFlame.classList.remove("extinguished");
-  DOM.smokeContainer.classList.remove("active");
+  DOM.candleFlames.forEach(flame => flame.classList.remove("extinguished"));
+  DOM.smokeContainers.forEach(smoke => smoke.classList.remove("active"));
   DOM.victoryModal.classList.remove("active");
   stopConfettiCelebration();
 }
@@ -455,7 +457,7 @@ function startAudioAnalysisLoop() {
       // Estado de soplido activo
       if (!state.isUserBlowing) {
         state.isUserBlowing = true;
-        DOM.candleFlame.classList.add("is-blowing");
+        DOM.candleFlames.forEach(flame => flame.classList.add("is-blowing"));
         DOM.micIndicator.classList.add("blowing");
         DOM.micText.textContent = "💨 ¡Soplando!";
         DOM.blowFeedback.classList.add("active");
@@ -473,7 +475,7 @@ function startAudioAnalysisLoop() {
       // Usuario no está soplando
       if (state.isUserBlowing) {
         state.isUserBlowing = false;
-        DOM.candleFlame.classList.remove("is-blowing");
+        DOM.candleFlames.forEach(flame => flame.classList.remove("is-blowing"));
         DOM.micIndicator.classList.remove("blowing");
         DOM.micText.textContent = "Listo para soplar";
         DOM.blowFeedback.classList.remove("active");

@@ -58,7 +58,11 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: var(--bg-gradient);
+  background: 
+    radial-gradient(circle at 50% 35%, rgba(12, 10, 18, 0.35) 0%, rgba(6, 5, 11, 0.8) 100%),
+    url('fondo.jpg') no-repeat center center;
+  background-size: cover;
+  background-position: center center;
   user-select: none;
 }
 
@@ -240,7 +244,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   ESCENARIO DE LA VELA (Central Element)
+   ESCENARIO DE LA TORTA & LLAMAS VIRTUALES
    -------------------------------------------------------------------------- */
 .candle-stage {
   position: relative;
@@ -248,25 +252,57 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: auto 0;
+  margin: auto 0 0.5rem 0;
   z-index: 5;
+  width: 100%;
 }
 
-/* Contenedor de la Llama y Efectos */
-.flame-wrapper {
+/* Contenedor responsivo de la Torta 82 Años */
+.cake-wrapper {
   position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: min(390px, 86vw);
+  max-height: 52vh;
+  margin: 0 auto;
+}
+
+/* Imagen transparente de la torta */
+.cake-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 52vh;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.65));
+}
+
+/* Anclajes de precisión para cada llama virtual sobre los números 8 y 2 */
+.flame-anchor {
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: -4px;
-  z-index: 3;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.flame-anchor.flame-8 {
+  left: 41.3%;
+  top: 8.5%;
+}
+
+.flame-anchor.flame-2 {
+  left: 60.8%;
+  top: 8.8%;
 }
 
 /* Elemento Central: Llama con Glow Dinámico */
 .candle-flame {
   position: relative;
-  width: 44px;
-  height: 82px;
+  width: 22px;
+  height: 46px;
   border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
   
   /* Gradiente realista del cuerpo de la llama */
@@ -282,14 +318,12 @@ body {
   
   /* EFECTO GLOW MULTI-CAPA INTENSO MEDIANTE BOX-SHADOW */
   box-shadow: 
-    0 0 14px 4px #ffffff,
-    0 0 28px 10px var(--glow-yellow),
-    0 0 65px 22px var(--glow-orange),
-    0 0 110px 45px rgba(255, 140, 0, 0.45),
-    0 0 180px 80px rgba(255, 60, 0, 0.25);
+    0 0 10px 3px #ffffff,
+    0 0 20px 8px var(--glow-yellow),
+    0 0 45px 16px var(--glow-orange),
+    0 0 85px 32px rgba(255, 140, 0, 0.45),
+    0 0 140px 60px rgba(255, 60, 0, 0.25);
 
-  /* Animación natural de oscilación de la llama */
-  animation: flicker-natural 2.4s infinite ease-in-out;
   transform-origin: center bottom;
   
   /* Escala y opacidad gobernadas por el estado (0 a 100%) */
@@ -299,31 +333,40 @@ body {
   will-change: transform, opacity, box-shadow;
 }
 
+/* Oscilación asincrónica natural para cada llama */
+.candle-flame.flame-left {
+  animation: flicker-natural-1 2.2s infinite ease-in-out;
+}
+
+.candle-flame.flame-right {
+  animation: flicker-natural-2 2.7s infinite 0.35s ease-in-out;
+}
+
 /* Núcleo interior blanco (zona más caliente) */
 .flame-inner-white {
   position: absolute;
-  bottom: 12px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 16px;
-  height: 38px;
+  width: 8px;
+  height: 22px;
   background: #ffffff;
   border-radius: 50% 50% 40% 40%;
-  filter: blur(1.5px);
+  filter: blur(1px);
   opacity: 0.95;
 }
 
 /* Núcleo inferior azul (oxigenación en la base de la mecha) */
 .flame-inner-blue {
   position: absolute;
-  bottom: 2px;
+  bottom: 1px;
   left: 50%;
   transform: translateX(-50%);
-  width: 22px;
-  height: 14px;
+  width: 12px;
+  height: 8px;
   background: radial-gradient(ellipse, rgba(0, 160, 255, 0.8) 0%, rgba(30, 80, 255, 0.4) 60%, transparent 100%);
   border-radius: 50%;
-  filter: blur(1px);
+  filter: blur(0.8px);
 }
 
 /* Estado cuando el usuario está soplando en tiempo real */
@@ -340,8 +383,8 @@ body {
   transition: transform 0.4s ease-in, opacity 0.4s ease-in;
 }
 
-/* Animación de oscilación natural de una llama real */
-@keyframes flicker-natural {
+/* Animación de oscilación natural 1 (Llama izquierda) */
+@keyframes flicker-natural-1 {
   0%, 100% {
     transform: scale(var(--flame-scale)) rotate(-0.5deg) skewX(-0.5deg);
     border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
@@ -360,6 +403,26 @@ body {
   }
 }
 
+/* Animación de oscilación natural 2 (Llama derecha) */
+@keyframes flicker-natural-2 {
+  0%, 100% {
+    transform: scale(var(--flame-scale)) rotate(0.6deg) skewX(0.8deg);
+    border-radius: 51% 49% 36% 34% / 59% 61% 39% 41%;
+  }
+  30% {
+    transform: scale(calc(var(--flame-scale) * 0.97)) rotate(-1.3deg) skewX(-1deg);
+    border-radius: 49% 51% 34% 36% / 61% 59% 41% 39%;
+  }
+  60% {
+    transform: scale(calc(var(--flame-scale) * 1.04)) rotate(1deg) skewX(1.3deg);
+    border-radius: 53% 47% 37% 33% / 58% 62% 38% 42%;
+  }
+  85% {
+    transform: scale(calc(var(--flame-scale) * 0.99)) rotate(-0.7deg) skewX(-0.6deg);
+    border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
+  }
+}
+
 /* Animación turbulenta al recibir el impacto del viento (soplido) */
 @keyframes flicker-blowing {
   0% {
@@ -375,11 +438,11 @@ body {
 /* Mecha de la vela */
 .candle-wick {
   position: relative;
-  width: 4px;
-  height: 22px;
+  width: 3px;
+  height: 12px;
   background: linear-gradient(to top, #2b1d0c 0%, #15110d 60%, #ff4500 95%);
   border-radius: 2px 2px 0 0;
-  margin-top: -6px;
+  margin-top: -3px;
   z-index: 2;
 }
 
@@ -389,8 +452,8 @@ body {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: #ff5500;
   box-shadow: 0 0 6px 1px #ff3300;
@@ -401,12 +464,12 @@ body {
 /* Partículas de humo al extinguirse */
 .smoke-container {
   position: absolute;
-  top: 10px;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
   opacity: 0;
-  z-index: 4;
+  z-index: 12;
 }
 
 .smoke-container.active {
@@ -418,8 +481,8 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: rgba(180, 180, 195, 0.4);
-  filter: blur(6px);
+  background: rgba(200, 200, 215, 0.45);
+  filter: blur(5px);
   opacity: 0;
 }
 
@@ -446,83 +509,6 @@ body {
     opacity: 0;
     transform: translate(calc(-50% - 25px), -120px) scale(4.5);
   }
-}
-
-/* Cuerpo de la vela cilíndrica de cumpleaños */
-.candle-body {
-  position: relative;
-  width: 90px;
-  height: 160px;
-  background: linear-gradient(135deg, #d90429 0%, #ef233c 45%, #ff4d6d 100%);
-  border-radius: 12px 12px 6px 6px;
-  box-shadow: 
-    inset 8px 0 12px rgba(255, 255, 255, 0.25),
-    inset -8px 0 14px rgba(0, 0, 0, 0.4),
-    0 10px 25px rgba(0, 0, 0, 0.6);
-  z-index: 2;
-  overflow: hidden;
-}
-
-/* Rayas diagonales festivas de cumpleaños */
-.candle-stripes {
-  position: absolute;
-  top: 0;
-  left: -20px;
-  width: 140px;
-  height: 100%;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.3) 0px,
-    rgba(255, 255, 255, 0.3) 14px,
-    transparent 14px,
-    transparent 28px
-  );
-  pointer-events: none;
-}
-
-/* Borde superior cóncavo de la cera derretida */
-.candle-top-rim {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 14px;
-  background: radial-gradient(ellipse at center, #ffd166 0%, #ef233c 70%, #9b111e 100%);
-  border-radius: 50%;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-/* Gotas de cera derretida decorativas */
-.wax-drip {
-  position: absolute;
-  top: 8px;
-  width: 8px;
-  background: #ff4d6d;
-  border-radius: 0 0 6px 6px;
-  box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
-}
-
-.drip-left {
-  left: 18px;
-  height: 28px;
-}
-
-.drip-right {
-  right: 22px;
-  height: 42px;
-}
-
-/* Base de apoyo */
-.candle-plate {
-  position: relative;
-  width: 140px;
-  height: 18px;
-  background: radial-gradient(ellipse at center, #3a3845 0%, #1e1d24 70%, #0d0c10 100%);
-  border-radius: 50%;
-  margin-top: -8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1;
 }
 
 /* --------------------------------------------------------------------------
