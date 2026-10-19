@@ -46,40 +46,12 @@
   </div>
 
   <!-- ========================================================
-       ESCENARIO PRINCIPAL (Vela, Glow ambiental y HUD)
+       ESCENARIO PRINCIPAL (Vela y Glow ambiental cinematográfico)
        ======================================================== -->
   <main id="app-container" class="app-container">
     
     <!-- Resplandor ambiental de fondo sincronizado con la vela -->
     <div id="ambient-glow" class="ambient-glow"></div>
-
-    <!-- HUD Superior: Estado Multijugador y Barra de Vida -->
-    <header class="hud-header">
-      <div class="header-badges">
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          <span>EN VIVO MULTIJUGADOR</span>
-        </div>
-        <div id="mic-indicator" class="mic-status-pill">
-          <span class="mic-icon">🎙️</span>
-          <span id="mic-text">Listo para soplar</span>
-        </div>
-      </div>
-
-      <!-- Barra de Vida Colectiva -->
-      <div class="health-container">
-        <div class="health-info">
-          <span class="health-label">ENERGÍA DE LA LLAMA</span>
-          <span id="health-value-text" class="health-percentage">100%</span>
-        </div>
-        <div class="health-bar-track">
-          <div id="health-bar-fill" class="health-bar-fill" style="width: 100%;"></div>
-        </div>
-        <div class="health-points">
-          <span id="health-raw-text">10,000 / 10,000 HP</span>
-        </div>
-      </div>
-    </header>
 
     <!-- Escenario Central de la Torta de Cumpleaños -->
     <section class="candle-stage" aria-label="Torta de cumpleaños interactiva">
@@ -122,48 +94,19 @@
 
       </div>
     </section>
-
-    <!-- Feedback en tiempo real para el usuario que sopla -->
-    <div id="blow-feedback" class="blow-feedback">
-      <span class="blow-emoji">💨</span>
-      <span class="blow-text">¡Estás soplando! ¡Sigue así!</span>
-      <div class="blow-meter">
-        <div id="blow-meter-fill" class="blow-meter-fill"></div>
-      </div>
-    </div>
-
-    <!-- Barra inferior con controles para Eventos BTL (Reiniciar / Demo) -->
-    <footer class="hud-footer">
-      <button id="btn-reset" class="btn-subtle" title="Reiniciar vela a 10,000 HP para el próximo pase del show">
-        🔄 Reiniciar Vela (Admin / BTL)
-      </button>
-      <span id="connection-status" class="connection-status">
-        ● Sincronizado
-      </span>
-    </footer>
   </main>
 
   <!-- ========================================================
-       MODAL FINAL: AGRADECIMIENTO Y CIERRE AUTOMÁTICO
-       Se activa automáticamente cuando vida_vela <= 0
+       MODAL FINAL: AGRADECIMIENTO Y CIERRE AUTOMÁTICO (10s)
+       Easter Egg: Tocar el logo antes de 10s reinicia la vela
        ======================================================== -->
   <div id="victory-modal" class="modal-overlay victory-overlay">
     <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
     <div class="modal-card victory-card">
-      <div class="modal-brand-header">
+      <div class="modal-brand-header easter-egg-trigger" id="victory-logo-trigger" title="Hogar de Cristo">
         <img src="logo-hdc.png" alt="Hogar de Cristo" class="brand-logo-img">
       </div>
       <h2 class="victory-title">Muchas gracias por formar parte de esto</h2>
-      
-      <!-- Indicador de cuenta regresiva de 10 segundos -->
-      <div class="countdown-indicator">
-        <div class="countdown-track">
-          <div id="countdown-progress" class="countdown-progress"></div>
-        </div>
-        <p id="countdown-label" class="countdown-label">
-          Cerrando en <span id="countdown-timer">10</span> segundos...
-        </p>
-      </div>
     </div>
   </div>
 

@@ -85,7 +85,7 @@ body {
   height: 100dvh; /* Dynamic Viewport Height para soporte perfecto en móviles */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 1rem 1.25rem;
   overflow: hidden;
@@ -262,7 +262,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: auto 0 0.5rem 0;
+  margin: auto;
   z-index: 5;
   width: 100%;
 }
@@ -272,8 +272,8 @@ body {
   position: relative;
   display: inline-block;
   width: 100%;
-  max-width: min(390px, 86vw);
-  max-height: 52vh;
+  max-width: min(440px, 90vw);
+  max-height: 60vh;
   margin: 0 auto;
 }
 
@@ -282,9 +282,9 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 52vh;
+  max-height: 60vh;
   object-fit: contain;
-  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.65));
+  filter: drop-shadow(0 16px 36px rgba(0, 0, 0, 0.7));
 }
 
 /* Anclajes de precisión para cada llama virtual sobre los números 8 y 2 */
@@ -339,20 +339,20 @@ body {
   /* Escala y opacidad gobernadas por el estado (0 a 100%) */
   transform: scale(var(--flame-scale));
   opacity: var(--flame-opacity);
-  transition: transform 0.25s ease-out, opacity 0.3s ease-out, box-shadow 0.25s ease-out;
+  transition: opacity 0.3s ease-out, box-shadow 0.25s ease-out;
   will-change: transform, opacity, box-shadow;
 }
 
-/* Oscilación asincrónica natural para cada llama */
+/* Oscilación asincrónica viva y realista para cada llama */
 .candle-flame.flame-left {
-  animation: flicker-natural-1 2.2s infinite ease-in-out;
+  animation: flame-alive-left 1.2s infinite ease-in-out;
 }
 
 .candle-flame.flame-right {
-  animation: flicker-natural-2 2.7s infinite 0.35s ease-in-out;
+  animation: flame-alive-right 1.4s infinite 0.25s ease-in-out;
 }
 
-/* Núcleo interior blanco (zona más caliente) */
+/* Núcleo interior blanco (zona más caliente con micro-flicker) */
 .flame-inner-white {
   position: absolute;
   bottom: 8px;
@@ -364,6 +364,7 @@ body {
   border-radius: 50% 50% 40% 40%;
   filter: blur(1px);
   opacity: 0.95;
+  animation: inner-flicker 0.4s infinite alternate ease-in-out;
 }
 
 /* Núcleo inferior azul (oxigenación en la base de la mecha) */
@@ -393,43 +394,83 @@ body {
   transition: transform 0.4s ease-in, opacity 0.4s ease-in;
 }
 
-/* Animación de oscilación natural 1 (Llama izquierda) */
-@keyframes flicker-natural-1 {
+/* Animación orgánica de llama viva 1 (Llama izquierda sobre el 8) */
+@keyframes flame-alive-left {
   0%, 100% {
-    transform: scale(var(--flame-scale)) rotate(-0.5deg) skewX(-0.5deg);
+    transform: scale(var(--flame-scale), var(--flame-scale)) rotate(-1deg) skewX(-0.8deg);
     border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
+    filter: brightness(1);
   }
-  25% {
-    transform: scale(calc(var(--flame-scale) * 1.02)) rotate(1.2deg) skewX(1deg);
-    border-radius: 48% 52% 33% 37% / 58% 62% 38% 42%;
+  15% {
+    transform: scale(calc(var(--flame-scale) * 1.05), calc(var(--flame-scale) * 1.09)) rotate(1.8deg) skewX(1.4deg);
+    border-radius: 47% 53% 33% 37% / 57% 63% 37% 43%;
+    filter: brightness(1.08);
+  }
+  32% {
+    transform: scale(calc(var(--flame-scale) * 0.94), calc(var(--flame-scale) * 0.92)) rotate(-2deg) skewX(-1.8deg);
+    border-radius: 53% 47% 37% 33% / 63% 57% 43% 37%;
+    filter: brightness(0.94);
   }
   50% {
-    transform: scale(calc(var(--flame-scale) * 0.98)) rotate(-1deg) skewX(-1.2deg);
-    border-radius: 52% 48% 37% 33% / 62% 58% 42% 38%;
+    transform: scale(calc(var(--flame-scale) * 1.03), calc(var(--flame-scale) * 1.06)) rotate(1.2deg) skewX(0.8deg);
+    border-radius: 49% 51% 34% 36% / 59% 61% 39% 41%;
+    filter: brightness(1.04);
   }
-  75% {
-    transform: scale(calc(var(--flame-scale) * 1.03)) rotate(0.8deg) skewX(0.7deg);
-    border-radius: 50% 50% 36% 34% / 59% 61% 39% 41%;
+  68% {
+    transform: scale(calc(var(--flame-scale) * 0.97), calc(var(--flame-scale) * 0.96)) rotate(-1.4deg) skewX(-1.2deg);
+    border-radius: 52% 48% 36% 34% / 61% 59% 41% 39%;
+    filter: brightness(0.98);
+  }
+  85% {
+    transform: scale(calc(var(--flame-scale) * 1.06), calc(var(--flame-scale) * 1.11)) rotate(2.4deg) skewX(2deg);
+    border-radius: 46% 54% 32% 38% / 56% 64% 36% 44%;
+    filter: brightness(1.07);
   }
 }
 
-/* Animación de oscilación natural 2 (Llama derecha) */
-@keyframes flicker-natural-2 {
+/* Animación orgánica de llama viva 2 (Llama derecha sobre el 2) */
+@keyframes flame-alive-right {
   0%, 100% {
-    transform: scale(var(--flame-scale)) rotate(0.6deg) skewX(0.8deg);
+    transform: scale(var(--flame-scale), var(--flame-scale)) rotate(1deg) skewX(0.8deg);
     border-radius: 51% 49% 36% 34% / 59% 61% 39% 41%;
+    filter: brightness(1);
   }
-  30% {
-    transform: scale(calc(var(--flame-scale) * 0.97)) rotate(-1.3deg) skewX(-1deg);
-    border-radius: 49% 51% 34% 36% / 61% 59% 41% 39%;
+  18% {
+    transform: scale(calc(var(--flame-scale) * 0.93), calc(var(--flame-scale) * 0.91)) rotate(-1.8deg) skewX(-1.6deg);
+    border-radius: 54% 46% 38% 32% / 64% 56% 44% 36%;
+    filter: brightness(0.93);
   }
-  60% {
-    transform: scale(calc(var(--flame-scale) * 1.04)) rotate(1deg) skewX(1.3deg);
-    border-radius: 53% 47% 37% 33% / 58% 62% 38% 42%;
+  36% {
+    transform: scale(calc(var(--flame-scale) * 1.07), calc(var(--flame-scale) * 1.12)) rotate(2.2deg) skewX(1.8deg);
+    border-radius: 45% 55% 31% 39% / 55% 65% 35% 45%;
+    filter: brightness(1.1);
   }
-  85% {
-    transform: scale(calc(var(--flame-scale) * 0.99)) rotate(-0.7deg) skewX(-0.6deg);
-    border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
+  54% {
+    transform: scale(calc(var(--flame-scale) * 0.96), calc(var(--flame-scale) * 0.95)) rotate(-0.9deg) skewX(-0.7deg);
+    border-radius: 51% 49% 35% 35% / 60% 60% 40% 40%;
+    filter: brightness(0.97);
+  }
+  72% {
+    transform: scale(calc(var(--flame-scale) * 1.04), calc(var(--flame-scale) * 1.08)) rotate(1.6deg) skewX(1.3deg);
+    border-radius: 48% 52% 33% 37% / 58% 62% 38% 42%;
+    filter: brightness(1.06);
+  }
+  90% {
+    transform: scale(calc(var(--flame-scale) * 0.95), calc(var(--flame-scale) * 0.93)) rotate(-1.6deg) skewX(-1.4deg);
+    border-radius: 53% 47% 37% 33% / 62% 58% 42% 38%;
+    filter: brightness(0.95);
+  }
+}
+
+/* Micro-flicker del núcleo blanco */
+@keyframes inner-flicker {
+  0% {
+    transform: translateX(-50%) scale(0.9, 0.92);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(-50%) scale(1.08, 1.08);
+    opacity: 1;
   }
 }
 
@@ -846,37 +887,20 @@ body {
   margin: 0.25rem 0;
 }
 
-/* Indicador de Cuenta Regresiva de Cierre */
-.countdown-indicator {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.5rem;
+/* Easter Egg Trigger en el Logo */
+.easter-egg-trigger {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.countdown-track {
-  width: 100%;
-  height: 6px;
-  background: rgba(0, 156, 166, 0.12);
-  border-radius: 9999px;
-  overflow: hidden;
+.easter-egg-trigger:active {
+  transform: scale(0.92);
 }
 
-.countdown-progress {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-gold) 100%);
-  border-radius: 9999px;
-  transition: width 1s linear;
-}
-
-.countdown-label {
-  font-size: 0.82rem;
-  font-family: var(--font-body);
-  color: var(--brand-text-muted);
-  font-weight: 500;
+.easter-egg-trigger:hover .brand-logo-img {
+  filter: drop-shadow(0 4px 16px rgba(0, 156, 166, 0.5));
 }
 
 /* --------------------------------------------------------------------------

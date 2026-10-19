@@ -104,9 +104,7 @@ const DOM = {
   blowFeedback: document.getElementById("blow-feedback"),
   blowMeterFill: document.getElementById("blow-meter-fill"),
   victoryModal: document.getElementById("victory-modal"),
-  countdownProgress: document.getElementById("countdown-progress"),
-  countdownTimer: document.getElementById("countdown-timer"),
-  countdownLabel: document.getElementById("countdown-label"),
+  victoryLogoTrigger: document.getElementById("victory-logo-trigger"),
   btnReset: document.getElementById("btn-reset"),
   connectionStatus: document.getElementById("connection-status"),
   toast: document.getElementById("toast-notification"),
@@ -261,20 +259,20 @@ function updateCandleVisuals(health) {
   const percentage = Math.max(0, Math.min(100, (state.currentHealth / CANDLE_CONFIG.MAX_HEALTH) * 100));
   const healthFraction = percentage / 100;
 
-  // Actualizar textos y barra de vida
-  DOM.healthValueText.textContent = `${Math.round(percentage)}%`;
-  DOM.healthRawText.textContent = `${state.currentHealth.toLocaleString()} / ${CANDLE_CONFIG.MAX_HEALTH.toLocaleString()} HP`;
-  DOM.healthBarFill.style.width = `${percentage}%`;
-
-  // Cambiar color de la barra según nivel de vida con colores de la marca
-  if (percentage < 25) {
-    DOM.healthBarFill.style.background = "linear-gradient(90deg, #ff3b30 0%, #e5a93b 100%)";
-  } else {
-    DOM.healthBarFill.style.background = "linear-gradient(90deg, #009ca6 0%, #00c2cb 40%, #e5ab35 80%, #ffd700 100%)";
+  // Actualizar textos y barra de vida si existen en el DOM
+  if (DOM.healthValueText) DOM.healthValueText.textContent = `${Math.round(percentage)}%`;
+  if (DOM.healthRawText) DOM.healthRawText.textContent = `${state.currentHealth.toLocaleString()} / ${CANDLE_CONFIG.MAX_HEALTH.toLocaleString()} HP`;
+  if (DOM.healthBarFill) {
+    DOM.healthBarFill.style.width = `${percentage}%`;
+    if (percentage < 25) {
+      DOM.healthBarFill.style.background = "linear-gradient(90deg, #ff3b30 0%, #e5a93b 100%)";
+    } else {
+      DOM.healthBarFill.style.background = "linear-gradient(90deg, #009ca6 0%, #00c2cb 40%, #e5ab35 80%, #ffd700 100%)";
+    }
   }
 
   // Variables CSS reactivas (Scale, Opacity y Glow Factor)
-  // La llama se reduce proporcionalmente pero mantiene visibilidad hasta el final
+  // La llama se reduce proporcionalmente y reacciona fluidamente
   const flameScale = healthFraction > 0 ? (0.45 + (0.55 * healthFraction)) : 0;
   const flameOpacity = healthFraction > 0 ? (0.35 + (0.65 * healthFraction)) : 0;
   const glowFactor = healthFraction;
@@ -292,7 +290,7 @@ function updateCandleVisuals(health) {
       triggerExtinguishedState();
     }
   } else {
-    // Si la vela fue re-encendida
+    // Si la vela fue re-encendida (ej. Easter Egg)
     if (state.isExtinguished) {
       state.isExtinguished = false;
       triggerRekindleState();
@@ -315,79 +313,72 @@ function triggerExtinguishedState() {
   // Activar humo saliendo de ambas mechas
   DOM.smokeContainers.forEach(smoke => smoke.classList.add("active"));
 
-  // Liberar micrófono para ahorrar batería del teléfono
-  if (state.audioStream) {
-    state.audioStream.getTracks().forEach(track => track.stop());
-  }
+  // Pausar escucha activa (mantenemos stream temporalmente por si activan el Easter Egg antes de 10s)
   state.isListening = false;
 
-  // Retroalimentación háptica en teléfonos Android
+  // Retroalimentación háptica en teléfonos móviles
   if (navigator.vibrate) {
     navigator.vibrate([100, 50, 100, 50, 200]);
   }
 
   // Mostrar modal de agradecimiento institucional tras breve delay
   setTimeout(() => {
-    DOM.victoryModal.classList.add("active");
+    if (DOM.victoryModal) DOM.victoryModal.classList.add("active");
     startConfettiCelebration();
     startAutoCloseCountdown(10);
   }, 450);
 }
 
 /**
- * Inicia la cuenta regresiva de 10 segundos y cierra automáticamente la página.
+ * Inicia la cuenta en segundo plano de 10 segundos y cierra automáticamente la página.
  */
 function startAutoCloseCountdown(totalSeconds = 10) {
-  let secondsLeft = totalSeconds;
-
-  if (DOM.countdownTimer) DOM.countdownTimer.textContent = secondsLeft;
-  if (DOM.countdownProgress) DOM.countdownProgress.style.width = "100%";
-
   if (autoCloseTimerId) {
-    clearInterval(autoCloseTimerId);
+    clearTimeout(autoCloseTimerId);
     autoCloseTimerId = null;
   }
 
-  autoCloseTimerId = setInterval(() => {
-    secondsLeft--;
+  autoCloseTimerId = setTimeout(() => {
+    autoCloseTimerId = null;
 
-    if (DOM.countdownTimer) DOM.countdownTimer.textContent = secondsLeft;
-    if (DOM.countdownProgress) {
-      DOM.countdownProgress.style.width = `${Math.max(0, (secondsLeft / totalSeconds) * 100)}%`;
+    // Liberar micrófono
+    if (state.audioStream) {
+      state.audioStream.getTracks().forEach(track => track.stop());
+      state.audioStream = null;
     }
+    state.isListening = false;
 
-    if (secondsLeft <= 0) {
-      clearInterval(autoCloseTimerId);
-      autoCloseTimerId = null;
-
-      if (DOM.countdownLabel) {
-        DOM.countdownLabel.innerHTML = "<strong>✨ La celebración ha concluido.</strong><br>Ya puedes cerrar esta pestaña.";
-        DOM.countdownLabel.style.color = "var(--brand-teal-dark)";
-      }
-
-      // Intentar cerrar automáticamente la ventana
-      try {
-        window.open('', '_self', '');
-        window.close();
-      } catch (err) {
-        console.log("window.close() no permitido por la política del navegador:", err);
-      }
+    // Intentar cerrar automáticamente la ventana
+    try {
+      window.open('', '_self', '');
+      window.close();
+    } catch (err) {
+      console.log("window.close() no permitido por la política del navegador:", err);
     }
-  }, 1000);
+  }, totalSeconds * 1000);
 }
 
 /**
- * Re-enciende la vela si se solicita un reinicio administrativo.
+ * Re-enciende la vela si se activa el Easter Egg o se solicita un reinicio.
  */
 function triggerRekindleState() {
   if (autoCloseTimerId) {
-    clearInterval(autoCloseTimerId);
+    clearTimeout(autoCloseTimerId);
     autoCloseTimerId = null;
   }
-  DOM.candleFlames.forEach(flame => flame.classList.remove("extinguished"));
+  DOM.candleFlames.forEach(flame => {
+    flame.classList.remove("extinguished");
+    flame.classList.remove("is-blowing");
+  });
   DOM.smokeContainers.forEach(smoke => smoke.classList.remove("active"));
-  DOM.victoryModal.classList.remove("active");
+  if (DOM.victoryModal) DOM.victoryModal.classList.remove("active");
   stopConfettiCelebration();
+
+  // Reanudar detección de soplido si el micrófono ya estaba listo
+  if (state.audioContext && state.analyser && state.audioStream) {
+    state.isListening = true;
+    startAudioAnalysisLoop();
+  }
 }
 
 /* ==============================================================================
@@ -536,14 +527,16 @@ function startAudioAnalysisLoop() {
       if (!state.isUserBlowing) {
         state.isUserBlowing = true;
         DOM.candleFlames.forEach(flame => flame.classList.add("is-blowing"));
-        DOM.micIndicator.classList.add("blowing");
-        DOM.micText.textContent = "💨 ¡Soplando!";
-        DOM.blowFeedback.classList.add("active");
+        if (DOM.micIndicator) DOM.micIndicator.classList.add("blowing");
+        if (DOM.micText) DOM.micText.textContent = "💨 ¡Soplando!";
+        if (DOM.blowFeedback) DOM.blowFeedback.classList.add("active");
       }
 
-      // Intensidad relativa del soplido para barra de feedback
-      const intensity = Math.min(100, Math.round(((rms - CANDLE_CONFIG.BLOW_RMS_THRESHOLD) / 0.15) * 100));
-      DOM.blowMeterFill.style.width = `${Math.max(15, intensity)}%`;
+      // Intensidad relativa del soplido para barra de feedback si existe
+      if (DOM.blowMeterFill) {
+        const intensity = Math.min(100, Math.round(((rms - CANDLE_CONFIG.BLOW_RMS_THRESHOLD) / 0.15) * 100));
+        DOM.blowMeterFill.style.width = `${Math.max(15, intensity)}%`;
+      }
 
       // Calcular daño proporcional a la fuerza del soplido
       const dynamicDamage = Math.round(CANDLE_CONFIG.DAMAGE_PER_TICK * (1 + (rms * 2.5)));
@@ -554,10 +547,10 @@ function startAudioAnalysisLoop() {
       if (state.isUserBlowing) {
         state.isUserBlowing = false;
         DOM.candleFlames.forEach(flame => flame.classList.remove("is-blowing"));
-        DOM.micIndicator.classList.remove("blowing");
-        DOM.micText.textContent = "Listo para soplar";
-        DOM.blowFeedback.classList.remove("active");
-        DOM.blowMeterFill.style.width = "0%";
+        if (DOM.micIndicator) DOM.micIndicator.classList.remove("blowing");
+        if (DOM.micText) DOM.micText.textContent = "Listo para soplar";
+        if (DOM.blowFeedback) DOM.blowFeedback.classList.remove("active");
+        if (DOM.blowMeterFill) DOM.blowMeterFill.style.width = "0%";
         
         // Vaciar cualquier daño residual acumulado
         flushPendingDamage();
@@ -660,7 +653,33 @@ function setupEventListeners() {
     });
   }
 
-  // Botón reiniciar administrativo en footer (BTL Show Runner)
+  // Easter Egg en pantalla final: Tocar el logo de Hogar de Cristo antes de los 10s reinicia la experiencia
+  const victoryLogo = DOM.victoryLogoTrigger || document.getElementById("victory-logo-trigger");
+  if (victoryLogo) {
+    victoryLogo.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Solo actuar si el modal final está activo
+      if (DOM.victoryModal && DOM.victoryModal.classList.contains("active")) {
+        console.log("✨ Easter Egg activado: Reiniciando experiencia colaborativa...");
+        if (navigator.vibrate) navigator.vibrate([60, 40, 80]);
+        showToast("✨ ¡Celebración reiniciada!");
+
+        // Cancelar el auto-cierre de 10s
+        if (autoCloseTimerId) {
+          clearTimeout(autoCloseTimerId);
+          autoCloseTimerId = null;
+        }
+
+        // Reiniciar vela en Firebase a 10,000 HP (para todos los asistentes)
+        resetCandleHealth();
+
+        // Re-encender localmente de inmediato
+        triggerRekindleState();
+      }
+    });
+  }
+
+  // Botón reiniciar administrativo en footer (BTL Show Runner) si existe
   if (DOM.btnReset) {
     DOM.btnReset.addEventListener("click", () => {
       if (confirm("¿Deseas reiniciar la vela a 10,000 HP para todos los usuarios?")) {
