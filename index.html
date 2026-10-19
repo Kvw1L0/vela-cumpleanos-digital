@@ -56,8 +56,14 @@
     <!-- Escenario Central de la Torta de Cumpleaños -->
     <section class="candle-stage" aria-label="Torta de cumpleaños interactiva">
       
-      <!-- Contenedor de la Torta y Llamas Virtuales -->
-      <div id="cake-wrapper" class="cake-wrapper">
+      <!-- Píldora de Sincronización del Animador (Momento del Deseo) -->
+      <div id="waiting-pill" class="waiting-pill" aria-live="polite">
+        <span class="waiting-icon">✨</span>
+        <span id="waiting-text" class="waiting-text">Pide un deseo... esperando el conteo</span>
+      </div>
+
+      <!-- Contenedor de la Torta y Llamas Virtuales (Soporta soplido y toques táctiles) -->
+      <div id="cake-wrapper" class="cake-wrapper" title="Sopla al micrófono o toca la torta para apagar las velas">
         <img src="torta.png" alt="Torta 82 años Aniversario 2026" class="cake-image" id="cake-image">
         
         <!-- LLAMA VIRTUAL 1: Sobre la vela del número '8' -->
@@ -107,6 +113,35 @@
         <img src="logo-hdc.png" alt="Hogar de Cristo" class="brand-logo-img">
       </div>
       <h2 class="victory-title">Muchas gracias por formar parte de esto</h2>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       PANEL DE CONTROL DEL STAFF / ANIMADOR (BTL SHOWRUNNER)
+       Se abre con ?admin=1, tecla 'A' o triple-tap en el logo
+       ======================================================== -->
+  <div id="admin-modal" class="modal-overlay admin-overlay">
+    <div class="modal-card admin-card">
+      <div class="admin-header">
+        <h3 class="admin-title">Panel de Control en Vivo</h3>
+        <span class="admin-badge">Staff BTL</span>
+      </div>
+      <p class="admin-desc">Controla la experiencia de todos los asistentes en tiempo real:</p>
+      <div class="admin-actions">
+        <button id="btn-admin-unlock" class="btn-admin btn-admin-green">
+          <span class="btn-admin-icon">🟢</span>
+          <span>¡A SOPLAR! (Habilitar Soplidos)</span>
+        </button>
+        <button id="btn-admin-lock" class="btn-admin btn-admin-yellow">
+          <span class="btn-admin-icon">🟡</span>
+          <span>PAUSAR (Pide un Deseo / Conteo)</span>
+        </button>
+        <button id="btn-admin-reset" class="btn-admin btn-admin-red">
+          <span class="btn-admin-icon">🔄</span>
+          <span>REINICIAR VELA (10,000 HP)</span>
+        </button>
+      </div>
+      <button id="btn-admin-close" class="btn-subtle admin-close-btn">Cerrar Panel</button>
     </div>
   </div>
 

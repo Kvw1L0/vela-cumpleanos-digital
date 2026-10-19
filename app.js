@@ -80,6 +80,12 @@ const state = {
   transactionTimeout: null,
   isTransactionInProgress: false,
 
+  // Sincronización de Animador / Showrunner BTL
+  isEventLocked: false,
+  lastHapticPulseTime: 0,
+  isBigScreen: false,
+  tapFlutterTimeout: null,
+
   // Animaciones auxiliares
   animationFrameId: null
 };
@@ -100,8 +106,16 @@ const DOM = {
   micText: document.getElementById("mic-text"),
   blowFeedback: document.getElementById("blow-feedback"),
   blowMeterFill: document.getElementById("blow-meter-fill"),
+  cakeWrapper: document.getElementById("cake-wrapper"),
+  waitingPill: document.getElementById("waiting-pill"),
+  waitingText: document.getElementById("waiting-text"),
   victoryModal: document.getElementById("victory-modal"),
   victoryLogoTrigger: document.getElementById("victory-logo-trigger"),
+  adminModal: document.getElementById("admin-modal"),
+  btnAdminUnlock: document.getElementById("btn-admin-unlock"),
+  btnAdminLock: document.getElementById("btn-admin-lock"),
+  btnAdminReset: document.getElementById("btn-admin-reset"),
+  btnAdminClose: document.getElementById("btn-admin-close"),
   btnReset: document.getElementById("btn-reset"),
   connectionStatus: document.getElementById("connection-status"),
   toast: document.getElementById("toast-notification"),
@@ -167,6 +181,36 @@ function initFirebase() {
         }
       } else {
         showToast("Error de conexión con Firebase Realtime Database");
+      }
+    });
+
+    // Suscripción a la fase del evento (Momento del Deseo / Control del Animador)
+    const stageRef = ref(db, "fase_evento");
+    onValue(stageRef, (snapshot) => {
+      const fase = snapshot.val();
+      if (fase === "esperando") {
+        state.isEventLocked = true;
+        if (DOM.waitingPill) {
+          DOM.waitingPill.classList.remove("blow-ready");
+          DOM.waitingPill.classList.add("active");
+          if (DOM.waitingText) DOM.waitingText.textContent = "Pide un deseo... esperando el conteo";
+        }
+      } else {
+        // "activo" o null (por defecto habilitado)
+        const wasLocked = state.isEventLocked;
+        state.isEventLocked = false;
+        if (wasLocked && DOM.waitingPill) {
+          DOM.waitingPill.classList.add("blow-ready");
+          if (DOM.waitingText) DOM.waitingText.textContent = "🎉 ¡A SOPLAR! ¡TODOS JUNTOS!";
+          setTimeout(() => {
+            if (!state.isEventLocked && DOM.waitingPill) {
+              DOM.waitingPill.classList.remove("active");
+              DOM.waitingPill.classList.remove("blow-ready");
+            }
+          }, 3200);
+        } else if (DOM.waitingPill) {
+          DOM.waitingPill.classList.remove("active");
+        }
       }
     });
 
@@ -236,6 +280,9 @@ function flushPendingDamage() {
 function recordBlowDamage(damageAmount) {
   if (state.isExtinguished) return;
 
+  // Si el animador pausó los soplidos ("esperando"), no registrar daño
+  if (state.isEventLocked) return;
+
   state.pendingDamage += damageAmount;
 
   const now = Date.now();
@@ -248,6 +295,115 @@ function recordBlowDamage(damageAmount) {
       state.transactionTimeout = null;
       flushPendingDamage();
     }, CANDLE_CONFIG.TRANSACTION_THROTTLE_MS - timeSinceLast);
+  }
+}
+
+/**
+ * Alternativa accesible de soplido mediante toques en pantalla (Tap-to-Blow).
+ * Diseñado para entornos ruidosos o personas que prefieran interactuar tácticamente.
+ */
+function handleCakeTap(e) {
+  if (state.isExtinguished) return;
+
+  if (state.isEventLocked) {
+    showToast("✨ Pide un deseo... esperando el conteo");
+    return;
+  }
+
+  // Micro-vibración táctil (14ms)
+  if (navigator.vibrate) navigator.vibrate(14);
+
+  // Micro-flicker visual en las llamas al recibir el soplido táctil
+  DOM.candleFlames.forEach(flame => flame.classList.add("is-blowing"));
+  clearTimeout(state.tapFlutterTimeout);
+  state.tapFlutterTimeout = setTimeout(() => {
+    if (!state.isUserBlowing) {
+      DOM.candleFlames.forEach(flame => flame.classList.remove("is-blowing"));
+    }
+  }, 130);
+
+  // Daño táctil accesible (~120 HP por toque)
+  recordBlowDamage(120);
+}
+
+/**
+ * Cambia la fase del show en Firebase (Control de Animador / Showrunner).
+ */
+function setStageLock(isLocked) {
+  state.isEventLocked = isLocked;
+  const newPhase = isLocked ? "esperando" : "activo";
+  if (state.isFirebaseActive) {
+    const db = getDatabase();
+    set(ref(db, "fase_evento"), newPhase)
+      .then(() => showToast(isLocked ? "🟡 Soplidos pausados (Esperando conteo)" : "🟢 Soplidos habilitados (¡A soplar!)"))
+      .catch((err) => console.error("Error al cambiar fase:", err));
+  } else {
+    showToast(isLocked ? "Modo Local: Pausado" : "Modo Local: Activo");
+  }
+}
+
+/**
+ * Sintetiza un acorde mágico festivo y un soplido cálido usando Web Audio API.
+ * 0 archivos externos, 0 latencia, compatible con iOS y Android.
+ */
+function playCelebrationChime() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    const ctx = state.audioContext || new AudioContextClass();
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+
+    // 1. Efecto soplido / pffft con filtro paso bajo suave
+    const bufferSize = Math.floor(ctx.sampleRate * 0.35);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const whiteNoise = ctx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(750, now);
+    filter.frequency.exponentialRampToValueAtTime(140, now + 0.35);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.22, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    whiteNoise.start(now);
+
+    // 2. Acorde de campanas festivas (Mi Mayor Pentatónico: E5, G#5, B5, E6)
+    const notes = [659.25, 830.61, 987.77, 1318.51];
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, now + 0.15 + (index * 0.08));
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.setValueAtTime(0.2, now + 0.15 + (index * 0.08));
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8 + (index * 0.1));
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + 0.15 + (index * 0.08));
+      osc.stop(now + 2.2);
+    });
+
+  } catch (err) {
+    console.warn("No se pudo reproducir audio de celebración:", err);
   }
 }
 
@@ -332,16 +488,22 @@ function triggerExtinguishedState() {
   // Pausar escucha activa (mantenemos stream temporalmente por si activan el Easter Egg antes de 10s)
   state.isListening = false;
 
+  // Reproducir sonido cálido de celebración y soplido vía Web Audio API
+  playCelebrationChime();
+
   // Retroalimentación háptica en teléfonos móviles
   if (navigator.vibrate) {
-    navigator.vibrate([100, 50, 100, 50, 200]);
+    navigator.vibrate([100, 60, 150, 60, 300]);
   }
 
   // Mostrar modal de agradecimiento institucional tras breve delay
   setTimeout(() => {
     if (DOM.victoryModal) DOM.victoryModal.classList.add("active");
     startConfettiCelebration();
-    startAutoCloseCountdown(10);
+    // En modo pantalla gigante / proyector no cerrar automáticamente
+    if (!state.isBigScreen) {
+      startAutoCloseCountdown(10);
+    }
   }, 450);
 }
 
@@ -571,6 +733,13 @@ function startAudioAnalysisLoop() {
         DOM.blowMeterFill.style.width = `${Math.max(15, intensity)}%`;
       }
 
+      // Feedback háptico progresivo mientras sopla (cada 180ms)
+      const now = Date.now();
+      if (now - state.lastHapticPulseTime > 180) {
+        state.lastHapticPulseTime = now;
+        if (navigator.vibrate) navigator.vibrate(22);
+      }
+
       // Calcular daño proporcional a la fuerza del soplido
       const dynamicDamage = Math.round(CANDLE_CONFIG.DAMAGE_PER_TICK * (1 + (rms * 2.5)));
       recordBlowDamage(dynamicDamage);
@@ -687,16 +856,77 @@ function setupEventListeners() {
     });
   }
 
-  // Easter Egg en pantalla de bienvenida: Tocar el logo reinicia la vela a 10,000 HP (útil para el staff antes del show)
-  const welcomeLogo = document.querySelector(".welcome-card .brand-logo-img");
-  if (welcomeLogo) {
-    welcomeLogo.style.cursor = "pointer";
-    welcomeLogo.addEventListener("click", () => {
-      console.log("✨ Reset administrativo desde pantalla de bienvenida");
-      if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
-      resetCandleHealth();
+  // Respaldo Táctil: Tocar o cliquear la torta para soplar (accesibilidad y entornos ruidosos)
+  if (DOM.cakeWrapper) {
+    DOM.cakeWrapper.addEventListener("click", (e) => {
+      handleCakeTap(e);
     });
   }
+
+  // Controles del Panel de Administración (Staff / Animador)
+  if (DOM.btnAdminUnlock) {
+    DOM.btnAdminUnlock.addEventListener("click", () => setStageLock(false));
+  }
+  if (DOM.btnAdminLock) {
+    DOM.btnAdminLock.addEventListener("click", () => setStageLock(true));
+  }
+  if (DOM.btnAdminReset) {
+    DOM.btnAdminReset.addEventListener("click", () => {
+      if (confirm("¿Reiniciar la vela a 10,000 HP para todos los participantes?")) {
+        resetCandleHealth();
+      }
+    });
+  }
+  if (DOM.btnAdminClose) {
+    DOM.btnAdminClose.addEventListener("click", () => {
+      if (DOM.adminModal) DOM.adminModal.classList.remove("active");
+    });
+  }
+
+  // Triple toque en el logo de bienvenida o victoria para abrir el Panel de Staff
+  let logoTapCount = 0;
+  let logoTapTimer = null;
+  document.querySelectorAll(".brand-logo-img").forEach((logo) => {
+    logo.addEventListener("click", () => {
+      logoTapCount++;
+      clearTimeout(logoTapTimer);
+      if (logoTapCount >= 3) {
+        logoTapCount = 0;
+        if (DOM.adminModal) DOM.adminModal.classList.add("active");
+        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+      } else {
+        logoTapTimer = setTimeout(() => {
+          logoTapCount = 0;
+        }, 500);
+      }
+    });
+  });
+
+  // Atajos de teclado para operadores de pantalla gigante / proyector
+  window.addEventListener("keydown", (e) => {
+    // Tecla 'A': Abrir / cerrar Panel de Control
+    if (e.key === "a" || e.key === "A") {
+      if (DOM.adminModal) DOM.adminModal.classList.toggle("active");
+    }
+    // Tecla 'R': Reiniciar vela a 10,000 HP
+    if (e.key === "r" || e.key === "R") {
+      resetCandleHealth();
+    }
+    // Tecla 'B' o Espacio: Alternar fase (Pausar / Habilitar soplidos)
+    if (e.key === "b" || e.key === "B" || e.code === "Space") {
+      // Evitar scroll de la página si se pulsa espacio
+      e.preventDefault();
+      setStageLock(!state.isEventLocked);
+    }
+    // Tecla 'F': Alternar Pantalla Completa
+    if (e.key === "f" || e.key === "F") {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  });
 
   // Easter Egg en pantalla final: Tocar el logo de Hogar de Cristo antes de los 10s reinicia la experiencia
   const victoryLogo = DOM.victoryLogoTrigger || document.getElementById("victory-logo-trigger");
@@ -763,8 +993,27 @@ function startApp() {
     setupEventListeners();
     initFirebase();
 
-    // Soporte para URL parámetro ?reset=1 para reinicio rápido del staff
     const urlParams = new URLSearchParams(window.location.search);
+
+    // 1. Modo Pantalla Gigante / Proyector (?pantalla=1 / ?stage=1 / ?proyector=1)
+    if (urlParams.has("pantalla") || urlParams.has("proyector") || urlParams.has("stage") || urlParams.has("screen")) {
+      state.isBigScreen = true;
+      document.body.classList.add("big-screen-mode");
+      // Ocultar modal de bienvenida directamente en pantalla gigante
+      if (DOM.welcomeModal) {
+        DOM.welcomeModal.classList.remove("active");
+      }
+      console.log("🖥️ Modo Pantalla Gigante activado para proyector BTL");
+    }
+
+    // 2. Acceso directo al Panel de Control de Staff (?admin=1 / ?control=1)
+    if (urlParams.has("admin") || urlParams.has("staff") || urlParams.has("control")) {
+      if (DOM.adminModal) {
+        DOM.adminModal.classList.add("active");
+      }
+    }
+
+    // 3. Reinicio rápido por parámetro URL (?reset=1)
     if (urlParams.has("reset") || urlParams.has("reiniciar")) {
       setTimeout(() => resetCandleHealth(), 400);
       try {

@@ -957,3 +957,222 @@ body {
     gap: 0.75rem;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Sincronización del Animador: Píldora del Momento del Deseo
+   -------------------------------------------------------------------------- */
+.waiting-pill {
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1.1rem;
+  background: rgba(3, 22, 28, 0.88);
+  border: 1.5px solid var(--brand-gold);
+  box-shadow: 0 4px 20px rgba(212, 155, 40, 0.35);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  color: #fff4d1;
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 20;
+  white-space: nowrap;
+}
+
+.waiting-pill.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.waiting-pill.active.blow-ready {
+  background: rgba(0, 75, 84, 0.92);
+  border-color: #00e5ff;
+  box-shadow: 0 4px 25px rgba(0, 229, 255, 0.5);
+  color: #ffffff;
+  animation: pulse-ready 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-ready {
+  0% { transform: translateX(-50%) scale(1); }
+  100% { transform: translateX(-50%) scale(1.06); }
+}
+
+.waiting-icon {
+  font-size: 1rem;
+  animation: icon-float 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes icon-float {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2px); }
+}
+
+/* --------------------------------------------------------------------------
+   Respaldo Táctil: Toques sobre la torta para soplar en entornos ruidosos
+   -------------------------------------------------------------------------- */
+.cake-wrapper {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease-out;
+}
+
+.cake-wrapper:active {
+  transform: scale(0.985);
+}
+
+/* --------------------------------------------------------------------------
+   Modo Pantalla Gigante / Proyector (?pantalla=1 / ?stage=1)
+   -------------------------------------------------------------------------- */
+.big-screen-mode {
+  background-size: cover;
+  background-position: center;
+}
+
+.big-screen-mode .app-container {
+  padding: 2rem;
+  justify-content: center;
+}
+
+.big-screen-mode .cake-wrapper {
+  max-width: min(620px, 45vw);
+  max-height: 72vh;
+}
+
+.big-screen-mode .cake-image {
+  max-height: 72vh;
+  filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.85));
+}
+
+.big-screen-mode .candle-flame {
+  width: 28px;
+  height: 58px;
+}
+
+.big-screen-mode .ambient-glow {
+  width: 120vw;
+  max-width: 1100px;
+  height: 120vh;
+  max-height: 1100px;
+  filter: blur(75px);
+}
+
+.big-screen-mode .waiting-pill {
+  top: -65px;
+  font-size: 1.15rem;
+  padding: 0.65rem 1.6rem;
+}
+
+.big-screen-mode .modal-card.victory-card {
+  max-width: 580px;
+  padding: 3.5rem 3rem;
+}
+
+.big-screen-mode .modal-card.victory-card .brand-logo-img {
+  height: 85px;
+}
+
+.big-screen-mode .modal-card.victory-card .victory-title {
+  font-size: 2.3rem;
+}
+
+/* --------------------------------------------------------------------------
+   Panel de Control del Showrunner / Staff (?admin=1)
+   -------------------------------------------------------------------------- */
+.admin-card {
+  max-width: 440px;
+  background: #0f172a;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 2rem;
+  gap: 1.2rem;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.admin-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.admin-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  background: var(--brand-teal);
+  color: #ffffff;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-desc {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  text-align: left;
+  width: 100%;
+}
+
+.admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.btn-admin {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1.2rem;
+  border: none;
+  border-radius: 0.9rem;
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  text-align: left;
+}
+
+.btn-admin:active {
+  transform: scale(0.97);
+}
+
+.btn-admin-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+}
+
+.btn-admin-yellow {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+}
+
+.btn-admin-red {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+}
+
+.admin-close-btn {
+  margin-top: 0.4rem;
+  width: 100%;
+  padding: 0.7rem;
+}
