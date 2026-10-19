@@ -41,17 +41,13 @@ const CANDLE_CONFIG = {
   // Vida total inicial de la vela
   MAX_HEALTH: 10000,
 
-  // Umbral RMS para considerar que el usuario está soplando.
-  // Valores típicos: 0.05 a 0.12 (calibrado para micrófonos de móviles)
-  BLOW_RMS_THRESHOLD: 0.075,
+  // Umbral RMS para considerar que el usuario está soplando (calibrado para micrófonos de móviles)
+  BLOW_RMS_THRESHOLD: 0.055,
 
-  // Daño infligido a la vela por cada tick de soplido detectado
-  DAMAGE_PER_TICK: 45,
+  // Daño infligido a la vela por cada tick de soplido detectado (~2.5s a 3s de soplido continuo para apagarla solo, o ~1s en grupo)
+  DAMAGE_PER_TICK: 60,
 
-  // Intervalo de aceleración (throttle) para transacciones en Firebase (ms).
-  // CRÍTICO PARA PRODUCCIÓN: Si 50 usuarios soplan a 60 FPS, enviaríamos
-  // 3,000 transacciones/segundo a un solo nodo. Agrupar en batches de 120ms
-  // garantiza fluidez total sin saturar la red ni saturar Firebase.
+  // Intervalo de aceleración (throttle) para transacciones en Firebase (ms)
   TRANSACTION_THROTTLE_MS: 120,
 
   // Nombre del nodo en Firebase Realtime Database
@@ -78,10 +74,11 @@ const state = {
   isUserBlowing: false,
   consecutiveBlowFrames: 0,
 
-  // Batching de daño para Firebase
+  // Batching de daño para Firebase y control de concurrencia
   pendingDamage: 0,
   lastTransactionTime: 0,
   transactionTimeout: null,
+  isTransactionInProgress: false,
 
   // Animaciones auxiliares
   animationFrameId: null
@@ -126,8 +123,10 @@ function initFirebase() {
       "Para habilitar el multijugador en vivo, reemplaza 'firebaseConfig' en app.js con tus credenciales de Firebase Console."
     );
     showToast("Modo Demo Local (Configura tus credenciales de Firebase en app.js)");
-    DOM.connectionStatus.textContent = "● Modo Demo (Local)";
-    DOM.connectionStatus.classList.add("warning");
+    if (DOM.connectionStatus) {
+      DOM.connectionStatus.textContent = "● Modo Demo (Local)";
+      DOM.connectionStatus.classList.add("warning");
+    }
     
     // Inicializar visualmente en modo local
     updateCandleVisuals(CANDLE_CONFIG.MAX_HEALTH);
@@ -140,8 +139,10 @@ function initFirebase() {
     state.databaseRef = ref(db, CANDLE_CONFIG.DB_NODE);
     state.isFirebaseActive = true;
 
-    DOM.connectionStatus.textContent = "● Sincronizado en Vivo";
-    DOM.connectionStatus.classList.remove("warning");
+    if (DOM.connectionStatus) {
+      DOM.connectionStatus.textContent = "● Sincronizado en Vivo";
+      DOM.connectionStatus.classList.remove("warning");
+    }
 
     // Suscripción en tiempo real con onValue
     onValue(state.databaseRef, (snapshot) => {
@@ -160,8 +161,10 @@ function initFirebase() {
       console.error("Error al escuchar cambios en Firebase:", error);
       if (error.message && error.message.toLowerCase().includes("permission_denied")) {
         showToast("⚠️ Firebase: Falta habilitar las reglas de lectura/escritura en la consola");
-        DOM.connectionStatus.textContent = "● Reglas bloqueadas en Firebase";
-        DOM.connectionStatus.classList.add("warning");
+        if (DOM.connectionStatus) {
+          DOM.connectionStatus.textContent = "● Reglas bloqueadas en Firebase";
+          DOM.connectionStatus.classList.add("warning");
+        }
       } else {
         showToast("Error de conexión con Firebase Realtime Database");
       }
@@ -180,6 +183,11 @@ function initFirebase() {
 function flushPendingDamage() {
   if (state.pendingDamage <= 0) return;
 
+  // Si ya hay una transacción en vuelo hacia Firebase, esperar a que termine para no colisionar
+  if (state.isTransactionInProgress) {
+    return;
+  }
+
   const damageToSend = state.pendingDamage;
   state.pendingDamage = 0;
   state.lastTransactionTime = Date.now();
@@ -190,6 +198,8 @@ function flushPendingDamage() {
     updateCandleVisuals(simulatedHealth);
     return;
   }
+
+  state.isTransactionInProgress = true;
 
   // Transacción atómica de Firebase
   runTransaction(state.databaseRef, (currentHealthInDb) => {
@@ -206,11 +216,17 @@ function flushPendingDamage() {
     // Resta atómica del daño acumulado
     return Math.max(0, currentHealthInDb - damageToSend);
   }).then((result) => {
-    if (!result.committed) {
-      console.log("Transacción de soplido reintentada / abortada.");
+    state.isTransactionInProgress = false;
+    // Si se acumuló más daño mientras la petición estaba en vuelo, enviarlo inmediatamente
+    if (state.pendingDamage > 0) {
+      flushPendingDamage();
     }
   }).catch((error) => {
+    state.isTransactionInProgress = false;
     console.error("Error en runTransaction:", error);
+    if (state.pendingDamage > 0) {
+      flushPendingDamage();
+    }
   });
 }
 
@@ -236,16 +252,16 @@ function recordBlowDamage(damageAmount) {
 }
 
 /**
- * Reinicia la vida de la vela a 10,000 HP.
+ * Reinicia la vida de la vela a 10,000 HP (para todos los asistentes).
  */
 function resetCandleHealth() {
+  updateCandleVisuals(CANDLE_CONFIG.MAX_HEALTH);
   if (state.isFirebaseActive && state.databaseRef) {
     set(state.databaseRef, CANDLE_CONFIG.MAX_HEALTH)
-      .then(() => showToast("Vela encendida nuevamente a 10,000 HP"))
+      .then(() => showToast("✨ Vela encendida a 10,000 HP"))
       .catch((err) => console.error("Error al reiniciar vela:", err));
   } else {
-    updateCandleVisuals(CANDLE_CONFIG.MAX_HEALTH);
-    showToast("Vela encendida en modo local");
+    showToast("✨ Vela encendida");
   }
 }
 
@@ -633,11 +649,12 @@ function stopConfettiCelebration() {
    ============================================================================== */
 let toastTimeout;
 function showToast(message) {
+  if (!DOM.toast) return;
   DOM.toast.textContent = message;
   DOM.toast.classList.add("active");
   clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => {
-    DOM.toast.classList.remove("active");
+    if (DOM.toast) DOM.toast.classList.remove("active");
   }, 4500);
 }
 
@@ -650,6 +667,17 @@ function setupEventListeners() {
     DOM.btnJoin.addEventListener("click", (e) => {
       e.preventDefault();
       startAudioCapture();
+    });
+  }
+
+  // Easter Egg en pantalla de bienvenida: Tocar el logo reinicia la vela a 10,000 HP (útil para el staff antes del show)
+  const welcomeLogo = document.querySelector(".welcome-card .brand-logo-img");
+  if (welcomeLogo) {
+    welcomeLogo.style.cursor = "pointer";
+    welcomeLogo.addEventListener("click", () => {
+      console.log("✨ Reset administrativo desde pantalla de bienvenida");
+      if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
+      resetCandleHealth();
     });
   }
 
@@ -704,6 +732,15 @@ function startApp() {
   try {
     setupEventListeners();
     initFirebase();
+
+    // Soporte para URL parámetro ?reset=1 para reinicio rápido del staff
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("reset") || urlParams.has("reiniciar")) {
+      setTimeout(() => resetCandleHealth(), 400);
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {}
+    }
   } catch (err) {
     console.error("Error al arrancar la aplicación:", err);
   }
