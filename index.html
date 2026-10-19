@@ -12,10 +12,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="Vela de cumpleaños digital y multijugador interactiva para activaciones BTL y eventos en vivo.">
 
-  <!-- Tipografía moderna y elegante para eventos -->
+  <!-- Tipografía moderna del branding (Poppins, Outfit) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Estilos principales -->
   <link rel="stylesheet" href="style.css">
@@ -29,16 +29,18 @@
        el AudioContext y solicitar permisos del micrófono.
        ======================================================== -->
   <div id="welcome-modal" class="modal-overlay active">
-    <div class="modal-card">
-      <div class="modal-icon-sparkle">🕯️✨</div>
-      <h1 class="modal-title">Celebración en Vivo</h1>
+    <div class="modal-card welcome-card">
+      <div class="modal-brand-header">
+        <img src="logo-hdc.png" alt="Hogar de Cristo" class="brand-logo-img">
+      </div>
+      <h1 class="modal-title">Celebremos juntos</h1>
       <p class="modal-subtitle">
-        Conéctate con todos los asistentes para apagar la vela de cumpleaños gigante soplando al micrófono de tu teléfono.
+        Conéctate con todos los asistentes para apagar las velas de los 82 años soplando al micrófono de tu teléfono.
       </p>
 
       <div class="instructions-pill">
         <span class="pill-icon">💨</span>
-        <span>Sopla directo al micrófono para bajar la llama</span>
+        <span>Sopla directo al micrófono para apagar la llama</span>
       </div>
 
       <button id="btn-join" class="btn-primary" aria-label="Unirse a la celebración">

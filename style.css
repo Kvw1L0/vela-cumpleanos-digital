@@ -11,13 +11,23 @@
   --bg-dark: #08070d;
   --bg-gradient: radial-gradient(circle at 50% 60%, #17111f 0%, #08070d 75%);
   
+  /* Paleta oficial de marca Hogar de Cristo & 82 Años */
+  --brand-teal: #009ca6;
+  --brand-teal-light: #00c2cb;
+  --brand-teal-dark: #004b54;
+  --brand-teal-deep: #00363d;
+  --brand-gold: #d49b28;
+  --brand-gold-light: #f5c042;
+  --brand-cream: #f7f4ee;
+  --brand-card-bg: #ffffff;
+  --brand-text-dark: #0f2c35;
+  --brand-text-muted: #546e7a;
+
   /* Paleta de colores de la llama y glow */
   --glow-yellow: #ffff00;
   --glow-orange: #ff8c00;
   --glow-red: #ff3c00;
   --glow-white: #ffffff;
-  --candle-wax-1: #e92348;
-  --candle-wax-2: #ffe066;
   
   /* Variables dinámicas vinculadas al estado (0% a 100%) */
   --candle-health: 100%;
@@ -25,8 +35,8 @@
   --flame-opacity: 1;
   --flame-glow-factor: 1;
 
-  /* Tipografías */
-  --font-heading: 'Cinzel', serif;
+  /* Tipografías del Branding */
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Transición fluida para sincronización en tiempo real */
@@ -129,21 +139,21 @@ body {
   gap: 0.4rem;
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 156, 166, 0.18);
+  border: 1px solid rgba(0, 194, 203, 0.4);
   backdrop-filter: blur(8px);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #ffb703;
+  color: var(--brand-teal-light);
 }
 
 .live-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #ff3b30;
-  box-shadow: 0 0 8px #ff3b30;
+  background-color: #00e5ff;
+  box-shadow: 0 0 8px #00e5ff;
   animation: pulse-dot 1.8s infinite ease-in-out;
 }
 
@@ -158,25 +168,25 @@ body {
   gap: 0.4rem;
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
   font-size: 0.7rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: #b0bec5;
   transition: var(--transition-smooth);
 }
 
 .mic-status-pill.active {
-  background: rgba(34, 197, 94, 0.15);
-  border-color: rgba(34, 197, 94, 0.4);
-  color: #4ade80;
+  background: rgba(0, 156, 166, 0.2);
+  border-color: rgba(0, 194, 203, 0.5);
+  color: #4dd0e1;
 }
 
 .mic-status-pill.blowing {
-  background: rgba(251, 191, 36, 0.2);
-  border-color: rgba(251, 191, 36, 0.5);
-  color: #fde047;
+  background: rgba(212, 155, 40, 0.25);
+  border-color: rgba(245, 192, 66, 0.6);
+  color: #ffe082;
   transform: scale(1.04);
 }
 
@@ -185,8 +195,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  background: rgba(18, 16, 26, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(3, 22, 28, 0.78);
+  border: 1px solid rgba(0, 156, 166, 0.28);
   padding: 0.75rem 1rem;
   border-radius: 1rem;
   backdrop-filter: blur(16px);
@@ -203,20 +213,20 @@ body {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #94a3b8;
+  color: #80cbc4;
 }
 
 .health-percentage {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #ffbe0b;
-  text-shadow: 0 0 12px rgba(255, 190, 11, 0.5);
+  color: var(--brand-gold-light);
+  text-shadow: 0 0 12px rgba(245, 192, 66, 0.6);
 }
 
 .health-bar-track {
   width: 100%;
   height: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
   overflow: hidden;
   padding: 2px;
@@ -226,8 +236,8 @@ body {
 .health-bar-fill {
   height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #ff0055 0%, #ff8c00 50%, #ffff00 100%);
-  box-shadow: 0 0 10px rgba(255, 140, 0, 0.6);
+  background: linear-gradient(90deg, #009ca6 0%, #00c2cb 40%, #e5ab35 80%, #ffd700 100%);
+  box-shadow: 0 0 10px rgba(0, 194, 203, 0.5);
   transition: width 0.2s ease-out;
   will-change: width;
 }
@@ -619,7 +629,7 @@ body {
   justify-content: center;
   align-items: center;
   padding: 1.5rem;
-  background: rgba(5, 4, 10, 0.85);
+  background: radial-gradient(circle at 50% 30%, rgba(0, 156, 166, 0.28) 0%, rgba(4, 15, 20, 0.88) 85%);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   z-index: 100;
@@ -633,86 +643,124 @@ body {
   pointer-events: auto;
 }
 
+/* Tarjeta Base de Modales */
 .modal-card {
   width: 100%;
   max-width: 380px;
   background: linear-gradient(165deg, rgba(28, 24, 38, 0.95) 0%, rgba(14, 12, 20, 0.95) 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.75rem;
+  border-radius: 2rem;
   padding: 2.2rem 1.8rem;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(255, 140, 0, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.1rem;
+  gap: 1.15rem;
 }
 
-.modal-icon-sparkle {
-  font-size: 3rem;
-  filter: drop-shadow(0 0 16px rgba(255, 200, 0, 0.6));
-  animation: float-icon 3s infinite ease-in-out;
+/* Tarjeta de Bienvenida: Estilo Branding Hogar de Cristo */
+.modal-card.welcome-card {
+  background: var(--brand-card-bg);
+  border: 1.5px solid rgba(0, 156, 166, 0.22);
+  box-shadow: 
+    0 25px 65px rgba(0, 35, 45, 0.45),
+    0 0 35px rgba(0, 156, 166, 0.22);
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes float-icon {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+/* Línea superior con gradiente de marca (Teal y Dorado) */
+.modal-card.welcome-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-gold) 50%, var(--brand-teal-light) 100%);
 }
 
-.modal-title {
+/* Contenedor del Logo de Hogar de Cristo */
+.modal-brand-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.2rem 0;
+  width: 100%;
+}
+
+.brand-logo-img {
+  height: 52px;
+  max-width: 85%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0, 156, 166, 0.25));
+  animation: logo-glow 3s infinite alternate ease-in-out;
+}
+
+@keyframes logo-glow {
+  0% { transform: scale(1); filter: drop-shadow(0 3px 8px rgba(0, 156, 166, 0.2)); }
+  100% { transform: scale(1.02); filter: drop-shadow(0 4px 14px rgba(0, 156, 166, 0.4)); }
+}
+
+.modal-card.welcome-card .modal-title {
   font-family: var(--font-heading);
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--brand-teal-dark);
+  text-shadow: none;
+  line-height: 1.15;
 }
 
-.modal-subtitle {
-  font-size: 0.9rem;
+.modal-card.welcome-card .modal-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
   line-height: 1.5;
-  color: #cbd5e1;
+  color: var(--brand-text-muted);
 }
 
-.instructions-pill {
+.modal-card.welcome-card .instructions-pill {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.6rem 0.9rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px dashed rgba(255, 190, 11, 0.35);
-  border-radius: 0.75rem;
-  font-size: 0.78rem;
-  color: #fef08a;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 156, 166, 0.08);
+  border: 1.5px dashed rgba(0, 156, 166, 0.35);
+  border-radius: 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-teal-deep);
   text-align: left;
 }
 
 .pill-icon {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
 }
 
-/* Botón Principal de Acción */
+/* Botón Principal de Acción - Branding Hogar de Cristo */
 .btn-primary {
   position: relative;
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1.05rem 1.5rem;
   border: none;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #ff8c00 0%, #ff3b30 100%);
+  border-radius: 1.15rem;
+  background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-teal-dark) 100%);
   color: #ffffff;
-  font-family: var(--font-body);
-  font-size: 1rem;
+  font-family: var(--font-heading);
+  font-size: 1.02rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   cursor: pointer;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(255, 75, 0, 0.4), 0 0 20px rgba(255, 140, 0, 0.2);
+  box-shadow: 0 10px 24px rgba(0, 156, 166, 0.35), 0 0 15px rgba(212, 155, 40, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-primary:active {
   transform: scale(0.97);
-  box-shadow: 0 4px 12px rgba(255, 75, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 156, 166, 0.4);
 }
 
 .btn-glow {
@@ -746,8 +794,8 @@ body {
 }
 
 .audio-notice {
-  font-size: 0.65rem;
-  color: #64748b;
+  font-size: 0.68rem;
+  color: var(--brand-text-muted);
   line-height: 1.4;
 }
 

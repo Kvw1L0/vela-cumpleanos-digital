@@ -258,11 +258,11 @@ function updateCandleVisuals(health) {
   DOM.healthRawText.textContent = `${state.currentHealth.toLocaleString()} / ${CANDLE_CONFIG.MAX_HEALTH.toLocaleString()} HP`;
   DOM.healthBarFill.style.width = `${percentage}%`;
 
-  // Cambiar color de la barra según nivel de vida
+  // Cambiar color de la barra según nivel de vida con colores de la marca
   if (percentage < 25) {
-    DOM.healthBarFill.style.background = "linear-gradient(90deg, #ff0055 0%, #ff3b30 100%)";
+    DOM.healthBarFill.style.background = "linear-gradient(90deg, #ff3b30 0%, #e5a93b 100%)";
   } else {
-    DOM.healthBarFill.style.background = "linear-gradient(90deg, #ff0055 0%, #ff8c00 50%, #ffff00 100%)";
+    DOM.healthBarFill.style.background = "linear-gradient(90deg, #009ca6 0%, #00c2cb 40%, #e5ab35 80%, #ffd700 100%)";
   }
 
   // Variables CSS reactivas (Scale, Opacity y Glow Factor)
