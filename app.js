@@ -157,6 +157,7 @@ function initFirebase() {
       } else {
         // Actualizar la interfaz gráfica de todos los clientes conectados
         updateCandleVisuals(Number(val));
+      }
     }, (error) => {
       console.error("Error al escuchar cambios en Firebase:", error);
       if (error.message && error.message.toLowerCase().includes("permission_denied")) {
@@ -393,88 +394,90 @@ function triggerRekindleState() {
    7. CAPTURA DE AUDIO Y DETECCIÓN DE SOPLIDO (WEB AUDIO API)
    ============================================================================== */
 
+let isInitializingAudio = false;
+
 /**
  * Inicia el AudioContext y solicita acceso al micrófono.
  * Debe ser invocado dentro de un evento de interacción del usuario (click/tap).
  */
 async function startAudioCapture() {
-  // 1. Ocultar modal de inmediato para garantizar que NUNCA se quede pegado
-  if (DOM.welcomeModal) {
-    DOM.welcomeModal.classList.remove("active");
+  if (isInitializingAudio || state.isListening) {
+    if (DOM.welcomeModal) DOM.welcomeModal.classList.remove("active");
+    return;
+  }
+  isInitializingAudio = true;
+
+  // Actualizar feedback visual instantáneo en el botón
+  if (DOM.btnJoin) {
+    const btnContent = DOM.btnJoin.querySelector(".btn-content");
+    if (btnContent) btnContent.textContent = "CONECTANDO...";
   }
 
-  // 2. Verificar soporte de AudioContext
+  // 1. Inicializar AudioContext sincrónicamente dentro del gesto del usuario (crítico para iOS Safari)
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) {
-    showToast("Modo Espectador: Web Audio no disponible.");
+  if (AudioContextClass) {
+    try {
+      state.audioContext = new AudioContextClass();
+      if (state.audioContext.state === "suspended") {
+        state.audioContext.resume();
+      }
+    } catch (e) {
+      console.warn("AudioContext init warning:", e);
+    }
+  }
+
+  // 2. Verificar si el navegador soporta getUserMedia
+  const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+  if (!hasMediaDevices) {
+    console.warn("getUserMedia no soportado o contexto no seguro (se requiere HTTPS o localhost).");
+    showToast("Modo espectador: Visualizando la celebración en vivo.");
+    if (DOM.micText) DOM.micText.textContent = "Modo espectador";
+    if (DOM.welcomeModal) DOM.welcomeModal.classList.remove("active");
+    isInitializingAudio = false;
     return;
   }
 
+  // 3. Solicitar permiso de micrófono al navegador
   try {
-    state.audioContext = new AudioContextClass();
-
-    if (state.audioContext.state === "suspended") {
-      await state.audioContext.resume();
-    }
-
-    // 3. Verificar si el navegador soporta getUserMedia
-    const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    const legacyGetUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-
-    if (!hasMediaDevices && !legacyGetUserMedia) {
-      console.warn("getUserMedia no soportado en este entorno/protocolo.");
-      showToast("Modo espectador: Visualizando la celebración en vivo");
-      return;
-    }
-
-    // 4. Solicitar stream de micrófono con fallback
-    let stream = null;
-    if (hasMediaDevices) {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false
-          }
-        });
-      } catch (advancedErr) {
-        console.warn("Reintentando con restricciones de audio estándar...", advancedErr);
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      }
-    } else {
-      stream = await new Promise((resolve, reject) => {
-        legacyGetUserMedia.call(navigator, { audio: true }, resolve, reject);
-      });
-    }
-
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.audioStream = stream;
 
-    // 5. Conectar analizador de audio
-    const microphoneSource = state.audioContext.createMediaStreamSource(stream);
-    state.analyser = state.audioContext.createAnalyser();
-    state.analyser.fftSize = 512;
-    state.analyser.smoothingTimeConstant = 0.2;
+    // Conectar analizador de audio si tenemos AudioContext
+    if (state.audioContext) {
+      if (state.audioContext.state === "suspended") {
+        await state.audioContext.resume();
+      }
+      const microphoneSource = state.audioContext.createMediaStreamSource(stream);
+      state.analyser = state.audioContext.createAnalyser();
+      state.analyser.fftSize = 512;
+      state.analyser.smoothingTimeConstant = 0.2;
 
-    microphoneSource.connect(state.analyser);
-    state.isListening = true;
+      microphoneSource.connect(state.analyser);
+      state.isListening = true;
 
-    // Actualizar UI
-    if (DOM.micIndicator) DOM.micIndicator.classList.add("active");
-    if (DOM.micText) DOM.micText.textContent = "Micrófono conectado";
-    showToast("¡Micrófono listo! Sopla para apagar la vela");
+      // Actualizar UI del indicador
+      if (DOM.micIndicator) DOM.micIndicator.classList.add("active");
+      if (DOM.micText) DOM.micText.textContent = "Micrófono conectado";
+      showToast("¡Micrófono listo! Sopla para apagar la vela");
 
-    // Iniciar bucle de análisis en tiempo real
-    startAudioAnalysisLoop();
-
+      // Iniciar bucle de análisis en tiempo real
+      startAudioAnalysisLoop();
+    }
   } catch (error) {
-    console.error("Acceso al micrófono no disponible:", error);
+    console.error("Acceso al micrófono no disponible o denegado:", error);
     if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
       showToast("Permiso de micrófono no concedido. Modo espectador activo.");
     } else {
       showToast("Modo espectador: Visualizando la celebración en vivo.");
     }
     if (DOM.micText) DOM.micText.textContent = "Modo espectador";
+  } finally {
+    // Al resolver o rechazar el permiso, ocultar el modal de bienvenida
+    if (DOM.welcomeModal) {
+      DOM.welcomeModal.classList.remove("active");
+    }
+    isInitializingAudio = false;
   }
 }
 
@@ -649,12 +652,8 @@ function showToast(message) {
    10. LISTENERS DE EVENTOS Y REGISTRO DE USUARIO
    ============================================================================== */
 function setupEventListeners() {
-  // Botón inicial "Unirse a la celebración" con soporte dual táctil y click
+  // Botón inicial "Unirse a la celebración"
   if (DOM.btnJoin) {
-    DOM.btnJoin.onclick = (e) => {
-      e.preventDefault();
-      startAudioCapture();
-    };
     DOM.btnJoin.addEventListener("click", (e) => {
       e.preventDefault();
       startAudioCapture();
@@ -683,8 +682,12 @@ function setupEventListeners() {
    ARRANQUE DE LA APLICACIÓN (Garantiza ejecución sin importar el ciclo de vida)
    ============================================================================== */
 function startApp() {
-  setupEventListeners();
-  initFirebase();
+  try {
+    setupEventListeners();
+    initFirebase();
+  } catch (err) {
+    console.error("Error al arrancar la aplicación:", err);
+  }
 }
 
 if (document.readyState === "loading") {
