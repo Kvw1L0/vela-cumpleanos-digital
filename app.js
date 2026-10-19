@@ -398,70 +398,83 @@ function triggerRekindleState() {
  * Debe ser invocado dentro de un evento de interacción del usuario (click/tap).
  */
 async function startAudioCapture() {
-  try {
-    // Manejo de compatibilidad cruzada para AudioContext (iOS Safari & Chrome)
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) {
-      showToast("Tu navegador no soporta Web Audio API.");
-      return;
-    }
+  // 1. Ocultar modal de inmediato para garantizar que NUNCA se quede pegado
+  if (DOM.welcomeModal) {
+    DOM.welcomeModal.classList.remove("active");
+  }
 
+  // 2. Verificar soporte de AudioContext
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    showToast("Modo Espectador: Web Audio no disponible.");
+    return;
+  }
+
+  try {
     state.audioContext = new AudioContextClass();
 
-    // En iOS Safari, el AudioContext a menudo comienza en estado 'suspended'
     if (state.audioContext.state === "suspended") {
       await state.audioContext.resume();
     }
 
-    // Configuración de restricciones de audio:
-    // IMPORTANTE: echoCancellation y noiseSuppression en false evitan que el
-    // procesador de audio del teléfono filtre el sonido del soplido como "ruido ambiente".
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
-        }
+    // 3. Verificar si el navegador soporta getUserMedia
+    const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    const legacyGetUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+    if (!hasMediaDevices && !legacyGetUserMedia) {
+      console.warn("getUserMedia no soportado en este entorno/protocolo.");
+      showToast("Modo espectador: Visualizando la celebración en vivo");
+      return;
+    }
+
+    // 4. Solicitar stream de micrófono con fallback
+    let stream = null;
+    if (hasMediaDevices) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+      } catch (advancedErr) {
+        console.warn("Reintentando con restricciones de audio estándar...", advancedErr);
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+    } else {
+      stream = await new Promise((resolve, reject) => {
+        legacyGetUserMedia.call(navigator, { audio: true }, resolve, reject);
       });
-    } catch (e) {
-      // Fallback estándar si el dispositivo no soporta restricciones avanzadas
-      console.warn("Reintentando getUserMedia con restricciones estándar...");
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     }
 
     state.audioStream = stream;
 
-    // Configurar grafo de audio
+    // 5. Conectar analizador de audio
     const microphoneSource = state.audioContext.createMediaStreamSource(stream);
-    
-    // Crear AnalyserNode
     state.analyser = state.audioContext.createAnalyser();
     state.analyser.fftSize = 512;
-    state.analyser.smoothingTimeConstant = 0.2; // Respuesta ágil para soplidos
+    state.analyser.smoothingTimeConstant = 0.2;
 
-    // Conectar micrófono al Analyser (no conectar a destination para evitar feedback de audio)
     microphoneSource.connect(state.analyser);
-
     state.isListening = true;
 
     // Actualizar UI
-    DOM.welcomeModal.classList.remove("active");
-    DOM.micIndicator.classList.add("active");
-    DOM.micText.textContent = "Micrófono conectado";
+    if (DOM.micIndicator) DOM.micIndicator.classList.add("active");
+    if (DOM.micText) DOM.micText.textContent = "Micrófono conectado";
     showToast("¡Micrófono listo! Sopla para apagar la vela");
 
     // Iniciar bucle de análisis en tiempo real
     startAudioAnalysisLoop();
 
   } catch (error) {
-    console.error("Error al acceder al micrófono:", error);
+    console.error("Acceso al micrófono no disponible:", error);
     if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-      alert("Por favor permite el acceso al micrófono para interactuar con la vela.");
+      showToast("Permiso de micrófono no concedido. Modo espectador activo.");
     } else {
-      alert("No se pudo iniciar la captura de audio: " + error.message);
+      showToast("Modo espectador: Visualizando la celebración en vivo.");
     }
+    if (DOM.micText) DOM.micText.textContent = "Modo espectador";
   }
 }
 
@@ -636,17 +649,26 @@ function showToast(message) {
    10. LISTENERS DE EVENTOS Y REGISTRO DE USUARIO
    ============================================================================== */
 function setupEventListeners() {
-  // Botón inicial "Unirse a la celebración"
-  DOM.btnJoin.addEventListener("click", () => {
-    startAudioCapture();
-  });
+  // Botón inicial "Unirse a la celebración" con soporte dual táctil y click
+  if (DOM.btnJoin) {
+    DOM.btnJoin.onclick = (e) => {
+      e.preventDefault();
+      startAudioCapture();
+    };
+    DOM.btnJoin.addEventListener("click", (e) => {
+      e.preventDefault();
+      startAudioCapture();
+    });
+  }
 
   // Botón reiniciar administrativo en footer (BTL Show Runner)
-  DOM.btnReset.addEventListener("click", () => {
-    if (confirm("¿Deseas reiniciar la vela a 10,000 HP para todos los usuarios?")) {
-      resetCandleHealth();
-    }
-  });
+  if (DOM.btnReset) {
+    DOM.btnReset.addEventListener("click", () => {
+      if (confirm("¿Deseas reiniciar la vela a 10,000 HP para todos los usuarios?")) {
+        resetCandleHealth();
+      }
+    });
+  }
 
   // Ajustar tamaño del canvas de confeti en caso de rotación de pantalla
   window.addEventListener("resize", () => {
@@ -658,9 +680,15 @@ function setupEventListeners() {
 }
 
 /* ==============================================================================
-   ARRANQUE DE LA APLICACIÓN
+   ARRANQUE DE LA APLICACIÓN (Garantiza ejecución sin importar el ciclo de vida)
    ============================================================================== */
-document.addEventListener("DOMContentLoaded", () => {
+function startApp() {
   setupEventListeners();
   initFirebase();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startApp);
+} else {
+  startApp();
+}

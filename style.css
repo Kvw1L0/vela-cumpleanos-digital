@@ -668,6 +668,8 @@ body {
     0 0 35px rgba(0, 156, 166, 0.22);
   position: relative;
   overflow: hidden;
+  padding: 2.8rem 2rem 2.4rem;
+  gap: 1.4rem;
 }
 
 /* Línea superior con gradiente de marca (Teal y Dorado) */
@@ -691,7 +693,7 @@ body {
 }
 
 .brand-logo-img {
-  height: 52px;
+  height: 56px;
   max-width: 85%;
   object-fit: contain;
   filter: drop-shadow(0 3px 8px rgba(0, 156, 166, 0.25));
@@ -705,57 +707,46 @@ body {
 
 .modal-card.welcome-card .modal-title {
   font-family: var(--font-heading);
-  font-size: 1.85rem;
+  font-size: 1.95rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--brand-teal-dark);
-  text-shadow: none;
-  line-height: 1.15;
+  text-shadow: 0 1px 2px rgba(0, 75, 84, 0.1);
+  line-height: 1.2;
+  margin: 0.1rem 0;
+  text-align: center;
 }
 
 .modal-card.welcome-card .modal-subtitle {
   font-family: var(--font-body);
-  font-size: 0.92rem;
-  line-height: 1.5;
+  font-size: 0.98rem;
+  line-height: 1.6;
   color: var(--brand-text-muted);
-}
-
-.modal-card.welcome-card .instructions-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.75rem 1rem;
-  background: rgba(0, 156, 166, 0.08);
-  border: 1.5px dashed rgba(0, 156, 166, 0.35);
-  border-radius: 1rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--brand-teal-deep);
-  text-align: left;
-}
-
-.pill-icon {
-  font-size: 1.25rem;
+  text-align: center;
+  max-width: 330px;
 }
 
 /* Botón Principal de Acción - Branding Hogar de Cristo */
 .btn-primary {
   position: relative;
   width: 100%;
-  padding: 1.05rem 1.5rem;
+  padding: 1.15rem 1.6rem;
   border: none;
-  border-radius: 1.15rem;
+  border-radius: 1.25rem;
   background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-teal-dark) 100%);
   color: #ffffff;
   font-family: var(--font-heading);
-  font-size: 1.02rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   overflow: hidden;
   box-shadow: 0 10px 24px rgba(0, 156, 166, 0.35), 0 0 15px rgba(212, 155, 40, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.25);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-top: 0.35rem;
 }
 
 .btn-primary:active {
