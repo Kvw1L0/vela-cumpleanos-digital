@@ -428,6 +428,17 @@ async function startAudioCapture() {
       if (state.audioContext.state === "suspended") {
         state.audioContext.resume();
       }
+
+      // Desbloqueo nativo del motor de audio de iOS Safari (reproduce micro-buffer silencioso en el tap)
+      try {
+        const silentBuffer = state.audioContext.createBuffer(1, 1, 22050);
+        const source = state.audioContext.createBufferSource();
+        source.buffer = silentBuffer;
+        source.connect(state.audioContext.destination);
+        source.start(0);
+      } catch (unlockErr) {
+        // Ignorable si el navegador no lo requiere
+      }
     } catch (e) {
       console.warn("AudioContext init warning:", e);
     }
@@ -452,6 +463,7 @@ async function startAudioCapture() {
 
     // Conectar analizador de audio si tenemos AudioContext
     if (state.audioContext) {
+      // iOS Safari suspende AudioContext mientras el diálogo nativo está en pantalla; reanudarlo aquí
       if (state.audioContext.state === "suspended") {
         await state.audioContext.resume();
       }
@@ -473,7 +485,12 @@ async function startAudioCapture() {
     }
   } catch (error) {
     console.error("Acceso al micrófono no disponible o denegado:", error);
-    if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isInApp = /FBAN|FBAV|Instagram|WhatsApp|Line|Twitter|Snapchat/i.test(navigator.userAgent);
+
+    if (isInApp && isIOS) {
+      showToast("💡 En iPhone: Si no puedes soplar, abre en Safari tocando 'Compartir' o '...'");
+    } else if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
       showToast("Permiso de micrófono no concedido. Modo espectador activo.");
     } else {
       showToast("Modo espectador: Visualizando la celebración en vivo.");
@@ -723,6 +740,19 @@ function setupEventListeners() {
       DOM.confettiCanvas.height = window.innerHeight;
     }
   });
+
+  // Blindaje iOS / WebKit: Reanudar AudioContext si el usuario cambia de app o baja el Centro de Control
+  const resumeAudioOnReturn = () => {
+    if (state.audioContext && state.audioContext.state === "suspended" && state.isListening) {
+      state.audioContext.resume().catch((e) => console.log("AudioContext auto-resume:", e));
+    }
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      resumeAudioOnReturn();
+    }
+  });
+  window.addEventListener("pageshow", resumeAudioOnReturn);
 }
 
 /* ==============================================================================
