@@ -104,7 +104,9 @@ const DOM = {
   blowFeedback: document.getElementById("blow-feedback"),
   blowMeterFill: document.getElementById("blow-meter-fill"),
   victoryModal: document.getElementById("victory-modal"),
-  btnRestartCelebration: document.getElementById("btn-restart-celebration"),
+  countdownProgress: document.getElementById("countdown-progress"),
+  countdownTimer: document.getElementById("countdown-timer"),
+  countdownLabel: document.getElementById("countdown-label"),
   btnReset: document.getElementById("btn-reset"),
   connectionStatus: document.getElementById("connection-status"),
   toast: document.getElementById("toast-notification"),
@@ -292,6 +294,8 @@ function updateCandleVisuals(health) {
   }
 }
 
+let autoCloseTimerId = null;
+
 /**
  * Ejecuta la secuencia visual cuando la vela se apaga por completo.
  */
@@ -305,22 +309,75 @@ function triggerExtinguishedState() {
   // Activar humo saliendo de ambas mechas
   DOM.smokeContainers.forEach(smoke => smoke.classList.add("active"));
 
+  // Liberar micrófono para ahorrar batería del teléfono
+  if (state.audioStream) {
+    state.audioStream.getTracks().forEach(track => track.stop());
+  }
+  state.isListening = false;
+
   // Retroalimentación háptica en teléfonos Android
   if (navigator.vibrate) {
     navigator.vibrate([100, 50, 100, 50, 200]);
   }
 
-  // Mostrar modal de victoria "¡Deseo cumplido!" tras breve delay para impacto visual
+  // Mostrar modal de agradecimiento institucional tras breve delay
   setTimeout(() => {
     DOM.victoryModal.classList.add("active");
     startConfettiCelebration();
+    startAutoCloseCountdown(10);
   }, 450);
 }
 
 /**
- * Re-enciende la vela si se solicita un reinicio.
+ * Inicia la cuenta regresiva de 10 segundos y cierra automáticamente la página.
+ */
+function startAutoCloseCountdown(totalSeconds = 10) {
+  let secondsLeft = totalSeconds;
+
+  if (DOM.countdownTimer) DOM.countdownTimer.textContent = secondsLeft;
+  if (DOM.countdownProgress) DOM.countdownProgress.style.width = "100%";
+
+  if (autoCloseTimerId) {
+    clearInterval(autoCloseTimerId);
+    autoCloseTimerId = null;
+  }
+
+  autoCloseTimerId = setInterval(() => {
+    secondsLeft--;
+
+    if (DOM.countdownTimer) DOM.countdownTimer.textContent = secondsLeft;
+    if (DOM.countdownProgress) {
+      DOM.countdownProgress.style.width = `${Math.max(0, (secondsLeft / totalSeconds) * 100)}%`;
+    }
+
+    if (secondsLeft <= 0) {
+      clearInterval(autoCloseTimerId);
+      autoCloseTimerId = null;
+
+      if (DOM.countdownLabel) {
+        DOM.countdownLabel.innerHTML = "<strong>✨ La celebración ha concluido.</strong><br>Ya puedes cerrar esta pestaña.";
+        DOM.countdownLabel.style.color = "var(--brand-teal-dark)";
+      }
+
+      // Intentar cerrar automáticamente la ventana
+      try {
+        window.open('', '_self', '');
+        window.close();
+      } catch (err) {
+        console.log("window.close() no permitido por la política del navegador:", err);
+      }
+    }
+  }, 1000);
+}
+
+/**
+ * Re-enciende la vela si se solicita un reinicio administrativo.
  */
 function triggerRekindleState() {
+  if (autoCloseTimerId) {
+    clearInterval(autoCloseTimerId);
+    autoCloseTimerId = null;
+  }
   DOM.candleFlames.forEach(flame => flame.classList.remove("extinguished"));
   DOM.smokeContainers.forEach(smoke => smoke.classList.remove("active"));
   DOM.victoryModal.classList.remove("active");
@@ -505,7 +562,7 @@ function startConfettiCelebration() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const colors = ["#ffd700", "#ffbe0b", "#ff006e", "#8338ec", "#3a86ff", "#fb5607", "#ffffff"];
+  const colors = ["#009ca6", "#00c2cb", "#d49b28", "#f5c042", "#004b54", "#ffffff"];
   confettiParticles = [];
 
   for (let i = 0; i < 110; i++) {
@@ -577,11 +634,6 @@ function setupEventListeners() {
   // Botón inicial "Unirse a la celebración"
   DOM.btnJoin.addEventListener("click", () => {
     startAudioCapture();
-  });
-
-  // Botón reiniciar desde modal de victoria
-  DOM.btnRestartCelebration.addEventListener("click", () => {
-    resetCandleHealth();
   });
 
   // Botón reiniciar administrativo en footer (BTL Show Runner)

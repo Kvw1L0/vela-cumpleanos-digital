@@ -161,24 +161,26 @@
   </main>
 
   <!-- ========================================================
-       MODAL DE VICTORIA: ¡DESEO CUMPLIDO!
+       MODAL FINAL: AGRADECIMIENTO Y CIERRE AUTOMÁTICO
        Se activa automáticamente cuando vida_vela <= 0
        ======================================================== -->
   <div id="victory-modal" class="modal-overlay victory-overlay">
     <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
     <div class="modal-card victory-card">
-      <div class="victory-icon">🎉🎂✨</div>
-      <h2 class="victory-title">¡Deseo Cumplido!</h2>
-      <p class="victory-message">
-        ¡Increíble trabajo en equipo! Todos los soplidos se unieron y la vela se ha apagado.
-      </p>
-      <div class="wish-highlight">
-        "Que este nuevo año venga lleno de éxitos y momentos inolvidables"
+      <div class="modal-brand-header">
+        <img src="logo-hdc.png" alt="Hogar de Cristo" class="brand-logo-img">
       </div>
-      <button id="btn-restart-celebration" class="btn-primary victory-btn">
-        <span class="btn-glow"></span>
-        <span class="btn-content">Encender de nuevo</span>
-      </button>
+      <h2 class="victory-title">Muchas gracias por formar parte de esto</h2>
+      
+      <!-- Indicador de cuenta regresiva de 10 segundos -->
+      <div class="countdown-indicator">
+        <div class="countdown-track">
+          <div id="countdown-progress" class="countdown-progress"></div>
+        </div>
+        <p id="countdown-label" class="countdown-label">
+          Cerrando en <span id="countdown-timer">10</span> segundos...
+        </p>
+      </div>
     </div>
   </div>
 
