@@ -25,13 +25,13 @@ import {
    Puedes obtenerlas en: Firebase Console -> Project Settings -> General -> Your apps
    ============================================================================== */
 const firebaseConfig = {
-  apiKey: "TU_API_KEY_AQUI",
-  authDomain: "TU_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://TU_DATABASE_NAME.firebaseio.com",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_PROJECT_ID.appspot.com",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyClGXO8Xz08-qdUva_FZFKZk_Ig8tfAJgE",
+  authDomain: "vela-compartida-01a14bed.firebaseapp.com",
+  databaseURL: "https://vela-compartida-01a14bed-default-rtdb.firebaseio.com",
+  projectId: "vela-compartida-01a14bed",
+  storageBucket: "vela-compartida-01a14bed.firebasestorage.app",
+  messagingSenderId: "899370760497",
+  appId: "1:899370760497:web:8e5414005423f124c5d810"
 };
 
 /* ==============================================================================
@@ -157,10 +157,15 @@ function initFirebase() {
       } else {
         // Actualizar la interfaz gráfica de todos los clientes conectados
         updateCandleVisuals(Number(val));
-      }
     }, (error) => {
       console.error("Error al escuchar cambios en Firebase:", error);
-      showToast("Error de conexión con Firebase Realtime Database");
+      if (error.message && error.message.toLowerCase().includes("permission_denied")) {
+        showToast("⚠️ Firebase: Falta habilitar las reglas de lectura/escritura en la consola");
+        DOM.connectionStatus.textContent = "● Reglas bloqueadas en Firebase";
+        DOM.connectionStatus.classList.add("warning");
+      } else {
+        showToast("Error de conexión con Firebase Realtime Database");
+      }
     });
 
   } catch (error) {
